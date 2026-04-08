@@ -68,7 +68,7 @@ class ScoreboardApp:
         # Positioning
         self.left_x = int(self.screen_width * 0.23)
         self.right_x = int(self.screen_width * 0.77)
-        self.center_y = int(self.screen_height * 0.58)
+        self.center_y = int(self.screen_height * 0.51)
 
         # Font size
         self.font_size = int(self.screen_height * 0.45)
