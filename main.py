@@ -2,8 +2,35 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import os
 import json
+import random
+import time
 
 STATE_FILE = "state.json"
+ENV_FILE = ".env"
+IDLE_TIMEOUT_MS = 30 * 60 * 1000
+SLIDESHOW_INTERVAL_MS = 12 * 1000
+SLIDESHOW_FADE_DURATION_MS = 1000
+SLIDESHOW_FADE_STEPS = 10
+SUPPORTED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
+
+
+def load_env_value(key, default=None):
+    if not os.path.exists(ENV_FILE):
+        return default
+
+    try:
+        with open(ENV_FILE, "r", encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                env_key, env_value = line.split("=", 1)
+                if env_key.strip() == key:
+                    return env_value.strip().strip('"').strip("'")
+    except Exception:
+        return default
+
+    return default
 
 
 class ScoreboardApp:
@@ -15,6 +42,17 @@ class ScoreboardApp:
 
         self.showing_replay = False
         self.is_transitioning = False
+        self.screensaver_active = False
+        self.screensaver_job_id = None
+        self.screensaver_fade_job_id = None
+        self.idle_check_job_id = None
+        self.last_input_ms = int(time.monotonic() * 1000)
+        self.slideshow_dir = load_env_value(
+            "SLIDESHOW_DIR",
+            r"C:\Users\admin\Dropbox\slideshow"
+        )
+        self.current_screensaver_photo = None
+        self.current_screensaver_frame = None
 
         # Load state
         self.score_a = 0
@@ -83,13 +121,221 @@ class ScoreboardApp:
         self.canvas.tag_raise(self.overlay_canvas)
 
         # Key bindings
-        root.bind("q", lambda e: self.update_score("a", 1))
-        root.bind("a", lambda e: self.update_score("a", -1))
-        root.bind("p", lambda e: self.update_score("b", 1))
-        root.bind("l", lambda e: self.update_score("b", -1))
-        root.bind("r", lambda e: self.reset_scores())
-        root.bind("i", lambda e: self.toggle_replay())
+        root.bind("q", lambda e: self.on_streamdeck_input(
+            lambda: self.update_score("a", 1)
+        ))
+        root.bind("a", lambda e: self.on_streamdeck_input(
+            lambda: self.update_score("a", -1)
+        ))
+        root.bind("p", lambda e: self.on_streamdeck_input(
+            lambda: self.update_score("b", 1)
+        ))
+        root.bind("l", lambda e: self.on_streamdeck_input(
+            lambda: self.update_score("b", -1)
+        ))
+        root.bind("r", lambda e: self.on_streamdeck_input(self.reset_scores))
+        root.bind("i", lambda e: self.on_streamdeck_input(self.toggle_replay))
         root.bind("<Escape>", lambda e: root.destroy())
+
+        self.schedule_idle_check()
+
+    def on_streamdeck_input(self, action):
+        self.last_input_ms = int(time.monotonic() * 1000)
+
+        if self.screensaver_active:
+            self.stop_screensaver()
+            return
+
+        action()
+
+    def schedule_idle_check(self):
+        if self.idle_check_job_id is not None:
+            self.root.after_cancel(self.idle_check_job_id)
+
+        self.idle_check_job_id = self.root.after(5000, self.check_idle_timeout)
+
+    def check_idle_timeout(self):
+        self.idle_check_job_id = None
+
+        now_ms = int(time.monotonic() * 1000)
+        idle_ms = now_ms - self.last_input_ms
+
+        if (
+            not self.screensaver_active
+            and not self.showing_replay
+            and not self.is_transitioning
+            and idle_ms >= IDLE_TIMEOUT_MS
+        ):
+            self.start_screensaver()
+
+        self.schedule_idle_check()
+
+    def get_slideshow_images(self):
+        if not self.slideshow_dir or not os.path.isdir(self.slideshow_dir):
+            return []
+
+        files = []
+        try:
+            for filename in os.listdir(self.slideshow_dir):
+                path = os.path.join(self.slideshow_dir, filename)
+                if (
+                    os.path.isfile(path)
+                    and filename.lower().endswith(SUPPORTED_IMAGE_EXTENSIONS)
+                ):
+                    files.append(path)
+        except Exception:
+            return []
+
+        return files
+
+    def load_and_cover_image(self, image_path):
+        with Image.open(image_path) as img:
+            source = img.convert("RGBA")
+
+        src_w, src_h = source.size
+        if src_w == 0 or src_h == 0:
+            return None
+
+        scale = max(self.screen_width / src_w, self.screen_height / src_h)
+        new_w = int(src_w * scale)
+        new_h = int(src_h * scale)
+
+        resized = source.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+        crop_x = max(0, (new_w - self.screen_width) // 2)
+        crop_y = max(0, (new_h - self.screen_height) // 2)
+
+        return resized.crop(
+            (
+                crop_x,
+                crop_y,
+                crop_x + self.screen_width,
+                crop_y + self.screen_height
+            )
+        )
+
+    def clear_pending_screensaver_jobs(self):
+        if self.screensaver_job_id is not None:
+            self.root.after_cancel(self.screensaver_job_id)
+            self.screensaver_job_id = None
+
+        if self.screensaver_fade_job_id is not None:
+            self.root.after_cancel(self.screensaver_fade_job_id)
+            self.screensaver_fade_job_id = None
+
+    def start_screensaver(self):
+        if self.screensaver_active:
+            return
+
+        self.screensaver_active = True
+        self.current_screensaver_frame = None
+        self.show_next_screensaver_image()
+
+    def stop_screensaver(self):
+        if not self.screensaver_active:
+            return
+
+        self.screensaver_active = False
+        self.clear_pending_screensaver_jobs()
+
+        self.current_screensaver_photo = self.overlay_photo
+        self.current_screensaver_frame = None
+        self.canvas.itemconfig(self.overlay_canvas, image=self.current_screensaver_photo)
+        self.canvas.tag_raise(self.overlay_canvas)
+
+    def show_next_screensaver_image(self):
+        if not self.screensaver_active:
+            return
+
+        image_paths = self.get_slideshow_images()
+        if not image_paths:
+            self.screensaver_job_id = self.root.after(
+                SLIDESHOW_INTERVAL_MS,
+                self.show_next_screensaver_image
+            )
+            return
+
+        selected_path = random.choice(image_paths)
+
+        try:
+            next_frame = self.load_and_cover_image(selected_path)
+            if next_frame is None:
+                raise ValueError("Invalid image dimensions")
+
+            if self.current_screensaver_frame is None:
+                self.fade_screensaver_in(next_frame)
+            else:
+                self.fade_between_screensaver_images(
+                    self.current_screensaver_frame,
+                    next_frame
+                )
+        except Exception:
+            self.screensaver_job_id = self.root.after(
+                SLIDESHOW_INTERVAL_MS,
+                self.show_next_screensaver_image
+            )
+
+    def fade_screensaver_in(self, next_frame):
+        frames = []
+        for i in range(SLIDESHOW_FADE_STEPS + 1):
+            alpha = int(255 * (i / SLIDESHOW_FADE_STEPS))
+            frame = next_frame.copy()
+            frame.putalpha(alpha)
+            frames.append(ImageTk.PhotoImage(frame))
+
+        delay = max(1, SLIDESHOW_FADE_DURATION_MS // SLIDESHOW_FADE_STEPS)
+        self.animate_screensaver_frames(
+            frames=frames,
+            delay=delay,
+            on_complete=lambda: self.finish_screensaver_frame(next_frame)
+        )
+
+    def fade_between_screensaver_images(self, from_frame, to_frame):
+        frames = []
+        for i in range(SLIDESHOW_FADE_STEPS + 1):
+            blend_amount = i / SLIDESHOW_FADE_STEPS
+            blended = Image.blend(from_frame, to_frame, blend_amount)
+            frames.append(ImageTk.PhotoImage(blended))
+
+        delay = max(1, SLIDESHOW_FADE_DURATION_MS // SLIDESHOW_FADE_STEPS)
+        self.animate_screensaver_frames(
+            frames=frames,
+            delay=delay,
+            on_complete=lambda: self.finish_screensaver_frame(to_frame)
+        )
+
+    def animate_screensaver_frames(self, frames, delay, on_complete, index=0):
+        if not self.screensaver_active:
+            return
+
+        if index >= len(frames):
+            self.screensaver_fade_job_id = None
+            on_complete()
+            return
+
+        self.current_screensaver_photo = frames[index]
+        self.canvas.itemconfig(self.overlay_canvas, image=self.current_screensaver_photo)
+        self.canvas.tag_raise(self.overlay_canvas)
+
+        self.screensaver_fade_job_id = self.root.after(
+            delay,
+            lambda: self.animate_screensaver_frames(
+                frames,
+                delay,
+                on_complete,
+                index + 1
+            )
+        )
+
+    def finish_screensaver_frame(self, frame):
+        if not self.screensaver_active:
+            return
+
+        self.current_screensaver_frame = frame
+        self.screensaver_job_id = self.root.after(
+            SLIDESHOW_INTERVAL_MS,
+            self.show_next_screensaver_image
+        )
 
     def create_scaled_text(self, x, y, text, color):
         item = self.canvas.create_text(
