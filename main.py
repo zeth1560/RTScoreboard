@@ -3,6 +3,9 @@ from PIL import Image, ImageTk
 import os
 import json
 import random
+import shutil
+import subprocess
+import tempfile
 import time
 
 STATE_FILE = "state.json"
@@ -12,6 +15,9 @@ SLIDESHOW_INTERVAL_MS = 12 * 1000
 SLIDESHOW_FADE_DURATION_MS = 1000
 SLIDESHOW_FADE_STEPS = 10
 SUPPORTED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
+DEFAULT_REPLAY_VIDEO_PATH = r"C:\ReplayTrove\INSTANTREPLAY.mp4"
+REPLAY_VIDEO_START_DELAY_MS = 3000
+REPLAY_VIDEO_POLL_MS = 500
 
 
 def load_env_value(key, default=None):
@@ -42,6 +48,10 @@ class ScoreboardApp:
 
         self.showing_replay = False
         self.is_transitioning = False
+        self.replay_video_process = None
+        self.replay_video_active = False
+        self.replay_video_start_job_id = None
+        self.replay_video_poll_job_id = None
         self.screensaver_active = False
         self.screensaver_job_id = None
         self.screensaver_fade_job_id = None
@@ -51,6 +61,13 @@ class ScoreboardApp:
             "SLIDESHOW_DIR",
             r"C:\Users\admin\Dropbox\slideshow"
         )
+        self.replay_video_path = load_env_value(
+            "REPLAY_VIDEO_PATH",
+            DEFAULT_REPLAY_VIDEO_PATH
+        )
+        self.mpv_path = load_env_value("MPV_PATH")
+        self.mpv_exit_hotkey = load_env_value("MPV_EXIT_HOTKEY", "Ctrl+Shift+i")
+        self.mpv_input_conf_path = None
         self.current_screensaver_photo = None
         self.current_screensaver_frame = None
 
@@ -135,7 +152,7 @@ class ScoreboardApp:
         ))
         root.bind("r", lambda e: self.on_streamdeck_input(self.reset_scores))
         root.bind("i", lambda e: self.on_streamdeck_input(self.toggle_replay))
-        root.bind("<Escape>", lambda e: root.destroy())
+        root.bind("<Escape>", lambda e: self.close_app())
 
         self.schedule_idle_check()
 
@@ -147,6 +164,14 @@ class ScoreboardApp:
             return
 
         action()
+
+    def close_app(self):
+        self.clear_pending_screensaver_jobs()
+        self.cancel_replay_video_launch()
+        self.cancel_replay_video_poll()
+        self.stop_replay_video_process()
+        self.cleanup_mpv_input_conf()
+        self.root.destroy()
 
     def schedule_idle_check(self):
         if self.idle_check_job_id is not None:
@@ -426,7 +451,12 @@ class ScoreboardApp:
         if self.is_transitioning:
             return
 
+        if self.replay_video_active:
+            self.stop_replay_video_and_return()
+            return
+
         if self.showing_replay:
+            self.cancel_replay_video_launch()
             self.fade_overlay_out()
         else:
             self.fade_overlay_in()
@@ -444,6 +474,7 @@ class ScoreboardApp:
     def finish_fade_in(self):
         self.showing_replay = True
         self.is_transitioning = False
+        self.schedule_replay_video_launch()
 
     def fade_overlay_out(self):
         self.is_transitioning = True
@@ -456,7 +487,11 @@ class ScoreboardApp:
         )
 
     def finish_fade_out(self):
+        self.cancel_replay_video_launch()
+        self.cancel_replay_video_poll()
+        self.stop_replay_video_process()
         self.showing_replay = False
+        self.replay_video_active = False
         self.is_transitioning = False
 
     def run_overlay_fade(self, start_alpha, end_alpha, steps, delay, on_complete):
@@ -485,6 +520,171 @@ class ScoreboardApp:
             delay,
             lambda: self.animate_overlay_fade(index + 1, delay, on_complete)
         )
+
+    def schedule_replay_video_launch(self):
+        self.cancel_replay_video_launch()
+        self.replay_video_start_job_id = self.root.after(
+            REPLAY_VIDEO_START_DELAY_MS,
+            self.start_replay_video
+        )
+
+    def cancel_replay_video_launch(self):
+        if self.replay_video_start_job_id is not None:
+            self.root.after_cancel(self.replay_video_start_job_id)
+            self.replay_video_start_job_id = None
+
+    def start_replay_video(self):
+        self.replay_video_start_job_id = None
+
+        if not self.showing_replay or self.replay_video_active:
+            return
+
+        if not self.replay_video_path or not os.path.isfile(self.replay_video_path):
+            return
+
+        mpv_executable = self.resolve_mpv_executable()
+        if mpv_executable is None:
+            return
+
+        input_conf_path = self.ensure_mpv_input_conf()
+        if input_conf_path is None:
+            return
+
+        try:
+            self.replay_video_process = subprocess.Popen(
+                [
+                    mpv_executable,
+                    "--fs",
+                    "--force-window=yes",
+                    "--keep-open=yes",
+                    "--ontop",
+                    f"--input-conf={input_conf_path}",
+                    self.replay_video_path
+                ]
+            )
+        except Exception:
+            self.replay_video_process = None
+            return
+
+        self.replay_video_active = True
+        self.schedule_replay_video_poll()
+
+    def ensure_mpv_input_conf(self):
+        if self.mpv_input_conf_path and os.path.isfile(self.mpv_input_conf_path):
+            return self.mpv_input_conf_path
+
+        hotkey = (self.mpv_exit_hotkey or "").strip()
+        if not hotkey:
+            hotkey = "Ctrl+Shift+i"
+
+        conf_line = f"{hotkey} quit\n"
+
+        try:
+            temp_dir = tempfile.gettempdir()
+            conf_path = os.path.join(temp_dir, "scoreboard_mpv_input.conf")
+            with open(conf_path, "w", encoding="utf-8") as f:
+                f.write(conf_line)
+            self.mpv_input_conf_path = conf_path
+            return conf_path
+        except Exception:
+            self.mpv_input_conf_path = None
+            return None
+
+    def cleanup_mpv_input_conf(self):
+        if not self.mpv_input_conf_path:
+            return
+
+        try:
+            if os.path.isfile(self.mpv_input_conf_path):
+                os.remove(self.mpv_input_conf_path)
+        except Exception:
+            pass
+
+        self.mpv_input_conf_path = None
+
+    def resolve_mpv_executable(self):
+        candidates = []
+
+        if self.mpv_path:
+            candidates.append(self.mpv_path)
+
+        discovered = shutil.which("mpv")
+        if discovered:
+            candidates.append(discovered)
+
+        discovered_exe = shutil.which("mpv.exe")
+        if discovered_exe:
+            candidates.append(discovered_exe)
+
+        candidates.extend(
+            [
+                r"C:\Program Files\mpv\mpv.exe",
+                r"C:\Program Files (x86)\mpv\mpv.exe",
+                r"C:\mpv\mpv.exe"
+            ]
+        )
+
+        for candidate in candidates:
+            if candidate and os.path.isfile(candidate):
+                return candidate
+
+        return None
+
+    def stop_replay_video_and_return(self):
+        self.cancel_replay_video_launch()
+        self.cancel_replay_video_poll()
+        self.stop_replay_video_process()
+        self.replay_video_active = False
+
+        if self.showing_replay and not self.is_transitioning:
+            self.fade_overlay_out()
+
+    def stop_replay_video_process(self):
+        if self.replay_video_process is None:
+            return
+
+        process = self.replay_video_process
+        self.replay_video_process = None
+
+        if process.poll() is not None:
+            return
+
+        try:
+            process.terminate()
+            process.wait(timeout=1.5)
+        except Exception:
+            try:
+                process.kill()
+            except Exception:
+                pass
+
+    def schedule_replay_video_poll(self):
+        self.cancel_replay_video_poll()
+        self.replay_video_poll_job_id = self.root.after(
+            REPLAY_VIDEO_POLL_MS,
+            self.poll_replay_video_process
+        )
+
+    def cancel_replay_video_poll(self):
+        if self.replay_video_poll_job_id is not None:
+            self.root.after_cancel(self.replay_video_poll_job_id)
+            self.replay_video_poll_job_id = None
+
+    def poll_replay_video_process(self):
+        self.replay_video_poll_job_id = None
+
+        process = self.replay_video_process
+        if not self.replay_video_active or process is None:
+            return
+
+        if process.poll() is None:
+            self.schedule_replay_video_poll()
+            return
+
+        self.replay_video_process = None
+        self.replay_video_active = False
+        if self.showing_replay and not self.is_transitioning:
+            self.fade_overlay_out()
 
     def save_state(self):
         with open(STATE_FILE, "w") as f:
