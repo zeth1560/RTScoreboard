@@ -18,6 +18,15 @@ SUPPORTED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
 DEFAULT_REPLAY_VIDEO_PATH = r"C:\ReplayTrove\INSTANTREPLAY.mp4"
 REPLAY_VIDEO_START_DELAY_MS = 3000
 REPLAY_VIDEO_POLL_MS = 500
+REPLAY_RETURN_SLATE_HOLD_MS = 350
+REPLAY_TO_VIDEO_FADE_DURATION_MS = 500
+REPLAY_TO_VIDEO_FADE_STEPS = 10
+
+
+def env_truthy(value, default=False):
+    if value is None or value == "":
+        return default
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
 
 
 def load_env_value(key, default=None):
@@ -50,6 +59,7 @@ class ScoreboardApp:
         self.is_transitioning = False
         self.replay_video_process = None
         self.replay_video_active = False
+        self.video_host_visible = False
         self.replay_video_start_job_id = None
         self.replay_video_poll_job_id = None
         self.screensaver_active = False
@@ -66,7 +76,8 @@ class ScoreboardApp:
             DEFAULT_REPLAY_VIDEO_PATH
         )
         self.mpv_path = load_env_value("MPV_PATH")
-        self.mpv_exit_hotkey = load_env_value("MPV_EXIT_HOTKEY", "Ctrl+Shift+i")
+        self.mpv_exit_hotkey = load_env_value("MPV_EXIT_HOTKEY", "Ctrl+Alt+q")
+        self.mpv_embedded = env_truthy(load_env_value("MPV_EMBEDDED"), False)
         self.mpv_input_conf_path = None
         self.current_screensaver_photo = None
         self.current_screensaver_frame = None
@@ -105,6 +116,8 @@ class ScoreboardApp:
             highlightthickness=0
         )
         self.canvas.pack(fill="both", expand=True)
+        self.video_host = tk.Frame(root, bg="black")
+        self.ensure_window_opaque()
 
         # Base scoreboard background
         self.bg_canvas = self.canvas.create_image(
@@ -170,6 +183,7 @@ class ScoreboardApp:
         self.cancel_replay_video_launch()
         self.cancel_replay_video_poll()
         self.stop_replay_video_process()
+        self.hide_video_host()
         self.cleanup_mpv_input_conf()
         self.root.destroy()
 
@@ -490,6 +504,7 @@ class ScoreboardApp:
         self.cancel_replay_video_launch()
         self.cancel_replay_video_poll()
         self.stop_replay_video_process()
+        self.hide_video_host()
         self.showing_replay = False
         self.replay_video_active = False
         self.is_transitioning = False
@@ -550,6 +565,19 @@ class ScoreboardApp:
         if input_conf_path is None:
             return
 
+        self.prepare_canvas_for_video_transition()
+
+        if self.mpv_embedded:
+            self.show_video_host()
+            self.root.update_idletasks()
+            self.root.after(250, lambda: self.spawn_mpv_embedded(mpv_executable, input_conf_path))
+        else:
+            self.spawn_mpv_fullscreen(mpv_executable, input_conf_path)
+
+    def spawn_mpv_fullscreen(self, mpv_executable, input_conf_path):
+        if not self.showing_replay or self.replay_video_active:
+            return
+
         try:
             self.replay_video_process = subprocess.Popen(
                 [
@@ -558,24 +586,112 @@ class ScoreboardApp:
                     "--force-window=yes",
                     "--keep-open=yes",
                     "--ontop",
+                    "--no-input-terminal",
                     f"--input-conf={input_conf_path}",
                     self.replay_video_path
                 ]
             )
         except Exception:
             self.replay_video_process = None
+            self.restore_canvas_after_video()
             return
 
         self.replay_video_active = True
+        self.fade_replay_slate_to_video()
         self.schedule_replay_video_poll()
 
-    def ensure_mpv_input_conf(self):
-        if self.mpv_input_conf_path and os.path.isfile(self.mpv_input_conf_path):
-            return self.mpv_input_conf_path
+    def spawn_mpv_embedded(self, mpv_executable, input_conf_path):
+        if not self.showing_replay or self.replay_video_active:
+            self.hide_video_host()
+            return
 
+        self.root.update_idletasks()
+        host_id = self.video_host.winfo_id()
+
+        try:
+            self.replay_video_process = subprocess.Popen(
+                [
+                    mpv_executable,
+                    f"--wid={host_id}",
+                    "--no-border",
+                    "--keep-open=yes",
+                    "--no-input-terminal",
+                    "--hwdec=no",
+                    f"--input-conf={input_conf_path}",
+                    self.replay_video_path
+                ]
+            )
+        except Exception:
+            self.replay_video_process = None
+            self.hide_video_host()
+            self.restore_canvas_after_video()
+            return
+
+        self.replay_video_active = True
+        self.fade_replay_slate_to_video()
+        self.schedule_replay_video_poll()
+
+    def prepare_canvas_for_video_transition(self):
+        # Keep only replay overlay visible while we transition to video.
+        self.canvas.configure(bg="black")
+        self.canvas.itemconfig(self.bg_canvas, state="hidden")
+        self.canvas.itemconfig("score", state="hidden")
+
+    def restore_canvas_after_video(self):
+        self.canvas.configure(bg="black")
+        self.canvas.itemconfig(self.bg_canvas, state="normal")
+        self.canvas.itemconfig("score", state="normal")
+        self.draw_scores()
+
+    def show_video_host(self):
+        if self.video_host_visible:
+            return
+
+        self.video_host.place(x=0, y=0, relwidth=1, relheight=1)
+        self.video_host_visible = True
+        self.canvas.lift()
+
+    def hide_video_host(self):
+        if not self.video_host_visible:
+            return
+
+        self.video_host.place_forget()
+        self.video_host_visible = False
+
+    def hide_canvas_for_video_playback(self):
+        self.canvas.pack_forget()
+
+    def show_canvas_after_video(self):
+        self.canvas.pack(fill="both", expand=True)
+        self.canvas.tag_raise(self.overlay_canvas)
+        self.ensure_window_opaque()
+
+    def fade_replay_slate_to_video(self):
+        delay = max(1, REPLAY_TO_VIDEO_FADE_DURATION_MS // REPLAY_TO_VIDEO_FADE_STEPS)
+        self.run_overlay_fade(
+            start_alpha=255,
+            end_alpha=0,
+            steps=REPLAY_TO_VIDEO_FADE_STEPS,
+            delay=delay,
+            on_complete=self.finish_replay_slate_to_video
+        )
+
+    def finish_replay_slate_to_video(self):
+        self.ensure_window_opaque()
+        self.current_overlay_photo = self.overlay_photo
+        self.canvas.itemconfig(self.overlay_canvas, image=self.current_overlay_photo)
+        self.hide_canvas_for_video_playback()
+
+    def ensure_window_opaque(self):
+        try:
+            self.root.attributes("-alpha", 1.0)
+        except Exception:
+            pass
+
+    def ensure_mpv_input_conf(self):
         hotkey = (self.mpv_exit_hotkey or "").strip()
         if not hotkey:
-            hotkey = "Ctrl+Shift+i"
+            hotkey = "Ctrl+Alt+q"
 
         conf_line = f"{hotkey} quit\n"
 
@@ -637,7 +753,13 @@ class ScoreboardApp:
         self.replay_video_active = False
 
         if self.showing_replay and not self.is_transitioning:
-            self.fade_overlay_out()
+            self.hide_video_host()
+            self.show_canvas_after_video()
+            self.restore_canvas_after_video()
+            self.current_overlay_photo = ImageTk.PhotoImage(self.replay_image)
+            self.canvas.itemconfig(self.overlay_canvas, image=self.current_overlay_photo)
+            self.canvas.tag_raise(self.overlay_canvas)
+            self.root.after(REPLAY_RETURN_SLATE_HOLD_MS, self.fade_overlay_out)
 
     def stop_replay_video_process(self):
         if self.replay_video_process is None:
@@ -684,7 +806,13 @@ class ScoreboardApp:
         self.replay_video_process = None
         self.replay_video_active = False
         if self.showing_replay and not self.is_transitioning:
-            self.fade_overlay_out()
+            self.hide_video_host()
+            self.show_canvas_after_video()
+            self.restore_canvas_after_video()
+            self.current_overlay_photo = ImageTk.PhotoImage(self.replay_image)
+            self.canvas.itemconfig(self.overlay_canvas, image=self.current_overlay_photo)
+            self.canvas.tag_raise(self.overlay_canvas)
+            self.root.after(REPLAY_RETURN_SLATE_HOLD_MS, self.fade_overlay_out)
 
     def save_state(self):
         with open(STATE_FILE, "w") as f:
