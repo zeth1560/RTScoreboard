@@ -5,8 +5,42 @@ import json
 import random
 import shutil
 import subprocess
+import re
 import tempfile
 import time
+
+if os.name == "nt":
+    import ctypes
+
+    _user32 = ctypes.windll.user32
+    _kernel32 = ctypes.windll.kernel32
+
+    class _WinRECT(ctypes.Structure):
+        _fields_ = [
+            ("left", ctypes.c_long),
+            ("top", ctypes.c_long),
+            ("right", ctypes.c_long),
+            ("bottom", ctypes.c_long),
+        ]
+
+    def win32_synthetic_click_window_center(hwnd_int):
+        user32 = ctypes.windll.user32
+        rect = _WinRECT()
+        if not user32.GetWindowRect(hwnd_int, ctypes.byref(rect)):
+            return
+
+        cx = (rect.left + rect.right) // 2
+        cy = (rect.top + rect.bottom) // 2
+        user32.SetCursorPos(cx, cy)
+        MOUSEEVENTF_LEFTDOWN = 0x0002
+        MOUSEEVENTF_LEFTUP = 0x0004
+        user32.mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+        user32.mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+
+else:
+
+    def win32_synthetic_click_window_center(hwnd_int):
+        pass
 
 STATE_FILE = "state.json"
 ENV_FILE = ".env"
@@ -19,14 +53,106 @@ DEFAULT_REPLAY_VIDEO_PATH = r"C:\ReplayTrove\INSTANTREPLAY.mp4"
 REPLAY_VIDEO_START_DELAY_MS = 3000
 REPLAY_VIDEO_POLL_MS = 500
 REPLAY_RETURN_SLATE_HOLD_MS = 350
-REPLAY_TO_VIDEO_FADE_DURATION_MS = 500
-REPLAY_TO_VIDEO_FADE_STEPS = 10
+FOCUS_WATCHDOG_INTERVAL_MS = 3000
+FOCUS_WATCHDOG_TICKS = 45
+RECORDING_DEFAULT_DURATION_MINUTES = 20
+RECORDING_COUNTDOWN_TICK_MS = 1000
+RECORDING_BLINK_INTERVAL_MS = 500
+RECORDING_OVERLAY_WIDTH = 440
+RECORDING_OVERLAY_HEIGHT = 178
+RECORDING_ENDED_MESSAGE = (
+    "Your recording has reached its maximum length and ended"
+)
+RECORDING_ENDED_HOLD_MINUTES_DEFAULT = 2
 
 
 def env_truthy(value, default=False):
     if value is None or value == "":
         return default
     return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+
+def parse_recording_hotkey_to_tk_bind(spec):
+    """
+    Map .env-style chords to Tk bind() sequences, e.g. Ctrl+Shift+g -> <Control-Shift-G>.
+    Plain single letter (no '+') uses legacy tuple ("legacy", "g") for case-insensitive bind.
+    Returns None if invalid.
+    """
+    raw = (spec or "").strip()
+    if not raw:
+        return None
+
+    if "+" not in raw:
+        key = raw[:1]
+        if len(key) == 1 and (key.isalpha() or key.isdigit()):
+            return ("legacy", key.lower() if key.isalpha() else key)
+        return None
+
+    parts = [p.strip().lower() for p in raw.split("+") if p.strip()]
+    if len(parts) < 2:
+        return None
+
+    mod_map = {
+        "ctrl": "Control",
+        "control": "Control",
+        "alt": "Alt",
+        "shift": "Shift",
+        "meta": "Meta",
+        "win": "Meta",
+        "cmd": "Meta",
+    }
+    mod_order = {"Control": 0, "Alt": 1, "Shift": 2, "Meta": 3}
+
+    modifiers = []
+    for p in parts[:-1]:
+        m = mod_map.get(p)
+        if m is None:
+            return None
+        if m not in modifiers:
+            modifiers.append(m)
+
+    key_raw = parts[-1]
+    if mod_map.get(key_raw) is not None:
+        return None
+
+    key = None
+    if len(key_raw) == 1:
+        if key_raw.isalpha():
+            key = key_raw.upper() if "Shift" in modifiers else key_raw.lower()
+        elif key_raw.isdigit():
+            key = key_raw
+        else:
+            return None
+    elif re.fullmatch(r"f([1-9]|1[0-2])", key_raw):
+        key = "F" + str(int(key_raw[1:]))
+    else:
+        return None
+
+    modifiers.sort(key=lambda m: mod_order.get(m, 99))
+    inner = "-".join(modifiers + [key])
+    return f"<{inner}>"
+
+
+def bind_recording_hotkey(widget, spec, default_spec, handler):
+    """Bind a recording hotkey from env, or default chord if parsing fails."""
+    for candidate in (spec, default_spec):
+        if not candidate:
+            continue
+        parsed = parse_recording_hotkey_to_tk_bind(candidate)
+        if parsed is None:
+            continue
+        if isinstance(parsed, tuple) and parsed[0] == "legacy":
+            char = parsed[1]
+            if len(char) == 1 and char.isalpha():
+                widget.bind(char, handler)
+                other = char.swapcase()
+                if other != char:
+                    widget.bind(other, handler)
+            else:
+                widget.bind(char, handler)
+            return
+        widget.bind(parsed, handler)
+        return
 
 
 def load_env_value(key, default=None):
@@ -48,6 +174,58 @@ def load_env_value(key, default=None):
     return default
 
 
+def win32_force_foreground(hwnd_int):
+    if os.name != "nt":
+        return
+
+    hwnd = hwnd_int
+    user32 = _user32
+    kernel32 = _kernel32
+
+    HWND_TOPMOST = -1
+    HWND_NOTOPMOST = -2
+    SWP_NOMOVE = 0x0002
+    SWP_NOSIZE = 0x0001
+    SW_RESTORE = 9
+
+    foreground = user32.GetForegroundWindow()
+    current_tid = kernel32.GetCurrentThreadId()
+    fg_tid = None
+
+    if foreground:
+        pid_dummy = ctypes.c_ulong()
+        fg_tid = user32.GetWindowThreadProcessId(foreground, ctypes.byref(pid_dummy))
+
+    if fg_tid and fg_tid != current_tid:
+        user32.AttachThreadInput(fg_tid, current_tid, True)
+
+    try:
+        user32.ShowWindow(hwnd, SW_RESTORE)
+        user32.BringWindowToTop(hwnd)
+        user32.SetWindowPos(
+            hwnd,
+            HWND_TOPMOST,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE | SWP_NOSIZE,
+        )
+        user32.SetWindowPos(
+            hwnd,
+            HWND_NOTOPMOST,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE | SWP_NOSIZE,
+        )
+        user32.SetForegroundWindow(hwnd)
+    finally:
+        if fg_tid and fg_tid != current_tid:
+            user32.AttachThreadInput(fg_tid, current_tid, False)
+
+
 class ScoreboardApp:
     def __init__(self, root):
         self.root = root
@@ -66,6 +244,8 @@ class ScoreboardApp:
         self.screensaver_job_id = None
         self.screensaver_fade_job_id = None
         self.idle_check_job_id = None
+        self.focus_watchdog_job_id = None
+        self.focus_watchdog_ticks_left = 0
         self.last_input_ms = int(time.monotonic() * 1000)
         self.slideshow_dir = load_env_value(
             "SLIDESHOW_DIR",
@@ -78,9 +258,69 @@ class ScoreboardApp:
         self.mpv_path = load_env_value("MPV_PATH")
         self.mpv_exit_hotkey = load_env_value("MPV_EXIT_HOTKEY", "Ctrl+Alt+q")
         self.mpv_embedded = env_truthy(load_env_value("MPV_EMBEDDED"), False)
+        self.synthetic_focus_click = env_truthy(
+            load_env_value("SYNTHETIC_FOCUS_CLICK"),
+            True if os.name == "nt" else False,
+        )
+        self._synthetic_click_attempts = 0
         self.mpv_input_conf_path = None
         self.current_screensaver_photo = None
         self.current_screensaver_frame = None
+
+        recording_minutes_raw = load_env_value(
+            "RECORDING_MAX_MINUTES",
+            str(RECORDING_DEFAULT_DURATION_MINUTES),
+        )
+        try:
+            minutes_parsed = max(1, int(float(recording_minutes_raw)))
+            self.recording_duration_sec = minutes_parsed * 60
+            self.recording_max_minutes_display = minutes_parsed
+        except (TypeError, ValueError):
+            self.recording_duration_sec = RECORDING_DEFAULT_DURATION_MINUTES * 60
+            self.recording_max_minutes_display = RECORDING_DEFAULT_DURATION_MINUTES
+
+        ended_hold_raw = load_env_value(
+            "RECORDING_ENDED_HOLD_MINUTES",
+            str(RECORDING_ENDED_HOLD_MINUTES_DEFAULT),
+        )
+        try:
+            hold_min = int(float(ended_hold_raw))
+            if hold_min < 1:
+                hold_min = RECORDING_ENDED_HOLD_MINUTES_DEFAULT
+            self.recording_ended_hold_ms = hold_min * 60 * 1000
+        except (TypeError, ValueError):
+            self.recording_ended_hold_ms = (
+                RECORDING_ENDED_HOLD_MINUTES_DEFAULT * 60 * 1000
+            )
+
+        self.recording_start_hotkey_env = load_env_value(
+            "RECORDING_START_HOTKEY",
+            "Ctrl+Shift+g",
+        )
+        self.recording_dismiss_hotkey_env = load_env_value(
+            "RECORDING_DISMISS_HOTKEY",
+            "Ctrl+Alt+m",
+        )
+        self.black_screen_hotkey_env = load_env_value(
+            "BLACK_SCREEN_HOTKEY",
+            "Ctrl+Shift+b",
+        )
+
+        self.recording_toplevel = None
+        self.recording_elapsed_sec = 0
+        self.recording_countdown_running = False
+        self.recording_ended_showing = False
+        self.recording_ui_active = False
+        self.recording_tick_job_id = None
+        self.recording_blink_job_id = None
+        self.recording_light_canvas = None
+        self.recording_light_shape_id = None
+        self.recording_header_label = None
+        self.recording_main_label = None
+        self._recording_light_visible = True
+        self.recording_ended_auto_dismiss_job_id = None
+        self.black_screen_active = False
+        self.black_screen_cover_visible = False
 
         # Load state
         self.score_a = 0
@@ -113,10 +353,12 @@ class ScoreboardApp:
             root,
             width=self.screen_width,
             height=self.screen_height,
-            highlightthickness=0
+            highlightthickness=0,
+            takefocus=True,
         )
         self.canvas.pack(fill="both", expand=True)
         self.video_host = tk.Frame(root, bg="black")
+        self.black_screen_frame = tk.Frame(root, bg="black", highlightthickness=0)
         self.ensure_window_opaque()
 
         # Base scoreboard background
@@ -165,9 +407,30 @@ class ScoreboardApp:
         ))
         root.bind("r", lambda e: self.on_streamdeck_input(self.reset_scores))
         root.bind("i", lambda e: self.on_streamdeck_input(self.toggle_replay))
+        bind_recording_hotkey(
+            root,
+            self.recording_start_hotkey_env,
+            "Ctrl+Shift+g",
+            lambda e: self.on_streamdeck_input(self.on_recording_start_hotkey),
+        )
+        bind_recording_hotkey(
+            root,
+            self.recording_dismiss_hotkey_env,
+            "Ctrl+Alt+m",
+            lambda e: self.on_streamdeck_input(self.on_recording_dismiss_hotkey),
+        )
+        bind_recording_hotkey(
+            root,
+            self.black_screen_hotkey_env,
+            "Ctrl+Shift+b",
+            lambda e: self.on_streamdeck_input(self.toggle_black_screen),
+        )
         root.bind("<Escape>", lambda e: self.close_app())
 
         self.schedule_idle_check()
+        self.schedule_claim_focus()
+        self.start_focus_watchdog()
+        self.schedule_synthetic_focus_clicks()
 
     def on_streamdeck_input(self, action):
         self.last_input_ms = int(time.monotonic() * 1000)
@@ -178,13 +441,444 @@ class ScoreboardApp:
 
         action()
 
+    def on_recording_start_hotkey(self):
+        if self.recording_ended_showing:
+            return
+        self.start_or_restart_recording_countdown()
+
+    def on_recording_dismiss_hotkey(self):
+        if not self.recording_ended_showing:
+            return
+        self.dismiss_recording_ended_message()
+
+    def _show_black_screen_cover(self):
+        if self.black_screen_cover_visible:
+            return
+        self.black_screen_frame.place(x=0, y=0, relwidth=1, relheight=1)
+        self.black_screen_frame.lift()
+        self.black_screen_cover_visible = True
+        self.lift_recording_overlay()
+
+    def _hide_black_screen_cover(self):
+        if not self.black_screen_cover_visible:
+            return
+        self.black_screen_frame.place_forget()
+        self.black_screen_cover_visible = False
+
+    def toggle_black_screen(self):
+        if self.is_transitioning or self.replay_video_active or self.showing_replay:
+            return
+        self.black_screen_active = not self.black_screen_active
+        if self.black_screen_active:
+            self._show_black_screen_cover()
+        else:
+            self._hide_black_screen_cover()
+        self.lift_recording_overlay()
+
+    def _recording_overlay_geometry(self):
+        x = self.screen_width - RECORDING_OVERLAY_WIDTH - 36
+        y = 28
+        return (
+            f"{RECORDING_OVERLAY_WIDTH}x{RECORDING_OVERLAY_HEIGHT}"
+            f"+{x}+{y}"
+        )
+
+    def ensure_recording_overlay_widgets(self):
+        if self.recording_toplevel is not None:
+            return
+
+        win = tk.Toplevel(self.root)
+        self.recording_toplevel = win
+        win.title("")
+        win.overrideredirect(True)
+        win.configure(bg="black", highlightthickness=0)
+        try:
+            win.attributes("-topmost", True)
+        except Exception:
+            pass
+
+        win.geometry(self._recording_overlay_geometry())
+
+        outer = tk.Frame(win, bg="black", highlightbackground="#333333", highlightthickness=2)
+        outer.pack(fill="both", expand=True, padx=0, pady=0)
+
+        body = tk.Frame(outer, bg="black")
+        body.pack(fill="both", expand=True, padx=14, pady=12)
+
+        light_canvas = tk.Canvas(
+            body,
+            width=44,
+            height=44,
+            bg="black",
+            highlightthickness=0,
+        )
+        light_canvas.pack(side="left", padx=(0, 12))
+        self.recording_light_canvas = light_canvas
+        self._recording_light_rebuild_circle()
+
+        text_col = tk.Frame(body, bg="black")
+        text_col.pack(side="left", fill="both", expand=True)
+
+        self.recording_header_label = tk.Label(
+            text_col,
+            text="",
+            fg="#cccccc",
+            bg="black",
+            font=("Arial", 14, "bold"),
+            justify="left",
+            wraplength=RECORDING_OVERLAY_WIDTH - 100,
+            anchor="w",
+        )
+        self.recording_header_label.pack(side="top", anchor="w")
+
+        self.recording_main_label = tk.Label(
+            text_col,
+            text="",
+            fg="white",
+            bg="black",
+            font=("Arial", 26, "bold"),
+            justify="left",
+            wraplength=RECORDING_OVERLAY_WIDTH - 100,
+            anchor="w",
+        )
+        self.recording_main_label.pack(side="top", anchor="w", pady=(6, 0))
+
+        try:
+            win.transient(self.root)
+        except Exception:
+            pass
+
+    def _recording_light_rebuild_circle(self):
+        c = self.recording_light_canvas
+        if c is None:
+            return
+        c.delete("all")
+        self.recording_light_shape_id = c.create_oval(
+            4,
+            4,
+            40,
+            40,
+            fill="#cc0000",
+            outline="#660000",
+            width=2,
+        )
+
+    def _recording_light_rebuild_square(self):
+        c = self.recording_light_canvas
+        if c is None:
+            return
+        c.delete("all")
+        self.recording_light_shape_id = c.create_rectangle(
+            4,
+            4,
+            40,
+            40,
+            fill="#cc0000",
+            outline="#660000",
+            width=2,
+        )
+
+    def cancel_recording_timers(self):
+        if self.recording_tick_job_id is not None:
+            try:
+                self.root.after_cancel(self.recording_tick_job_id)
+            except Exception:
+                pass
+            self.recording_tick_job_id = None
+
+        if self.recording_blink_job_id is not None:
+            try:
+                self.root.after_cancel(self.recording_blink_job_id)
+            except Exception:
+                pass
+            self.recording_blink_job_id = None
+
+    def cancel_recording_ended_auto_dismiss(self):
+        if self.recording_ended_auto_dismiss_job_id is not None:
+            try:
+                self.root.after_cancel(self.recording_ended_auto_dismiss_job_id)
+            except Exception:
+                pass
+            self.recording_ended_auto_dismiss_job_id = None
+
+    def recording_ended_auto_dismiss_fire(self):
+        self.recording_ended_auto_dismiss_job_id = None
+        if not self.recording_ended_showing:
+            return
+        self.dismiss_recording_ended_message()
+
+    def lift_recording_overlay(self):
+        if self.recording_toplevel is None:
+            return
+        try:
+            self.recording_toplevel.geometry(self._recording_overlay_geometry())
+            self.recording_toplevel.lift()
+            self.recording_toplevel.attributes("-topmost", True)
+        except Exception:
+            pass
+
+    def start_or_restart_recording_countdown(self):
+        self.ensure_recording_overlay_widgets()
+        self.cancel_recording_timers()
+
+        self.recording_elapsed_sec = 0
+        self.recording_countdown_running = True
+        self.recording_ended_showing = False
+        self.recording_ui_active = True
+        self._recording_light_visible = True
+        self._recording_light_rebuild_circle()
+        self._apply_recording_light_color()
+
+        if self.recording_header_label is not None:
+            self.recording_header_label.pack_forget()
+            self.recording_main_label.pack_forget()
+            self.recording_header_label.configure(
+                text=(
+                    f"RECORDING: MAX {self.recording_max_minutes_display} "
+                    "MINUTES"
+                ),
+            )
+            self.recording_header_label.pack(side="top", anchor="w")
+            self.recording_main_label.pack(side="top", anchor="w", pady=(6, 0))
+
+        self.recording_main_label.configure(
+            font=("Arial", 26, "bold"),
+            justify="left",
+        )
+        self._update_recording_countdown_label()
+
+        try:
+            self.recording_toplevel.deiconify()
+        except Exception:
+            pass
+        self.lift_recording_overlay()
+        self.schedule_recording_countdown_tick()
+        self.schedule_recording_blink()
+
+    def schedule_recording_countdown_tick(self):
+        self.recording_tick_job_id = self.root.after(
+            RECORDING_COUNTDOWN_TICK_MS,
+            self.recording_countdown_tick,
+        )
+
+    def recording_countdown_tick(self):
+        self.recording_tick_job_id = None
+
+        if not self.recording_countdown_running or self.recording_ended_showing:
+            return
+
+        self.recording_elapsed_sec += 1
+
+        if self.recording_elapsed_sec >= self.recording_duration_sec:
+            self.recording_elapsed_sec = self.recording_duration_sec
+            self._update_recording_countdown_label()
+            self.recording_countdown_running = False
+            self.show_recording_max_length_message()
+            return
+
+        self._update_recording_countdown_label()
+        self.schedule_recording_countdown_tick()
+
+    def _update_recording_countdown_label(self):
+        if self.recording_main_label is None:
+            return
+        total = max(0, min(self.recording_elapsed_sec, self.recording_duration_sec))
+        mm, ss = divmod(total, 60)
+        self.recording_main_label.configure(text=f"{mm:02d}:{ss:02d}")
+
+    def schedule_recording_blink(self):
+        self.recording_blink_job_id = self.root.after(
+            RECORDING_BLINK_INTERVAL_MS,
+            self.recording_blink_tick,
+        )
+
+    def recording_blink_tick(self):
+        self.recording_blink_job_id = None
+
+        if not self.recording_ui_active:
+            return
+
+        if not self.recording_countdown_running:
+            if self.recording_light_canvas and self.recording_light_shape_id is not None:
+                try:
+                    self.recording_light_canvas.itemconfig(
+                        self.recording_light_shape_id,
+                        fill="#cc0000",
+                    )
+                except Exception:
+                    pass
+            return
+
+        self._recording_light_visible = not self._recording_light_visible
+        self._apply_recording_light_color()
+        self.schedule_recording_blink()
+
+    def _apply_recording_light_color(self):
+        if (
+            self.recording_light_canvas is None
+            or self.recording_light_shape_id is None
+        ):
+            return
+        fill = "#cc0000" if self._recording_light_visible else "#330000"
+        try:
+            self.recording_light_canvas.itemconfig(
+                self.recording_light_shape_id,
+                fill=fill,
+            )
+        except Exception:
+            pass
+
+    def show_recording_max_length_message(self):
+        self.cancel_recording_timers()
+        self.cancel_recording_ended_auto_dismiss()
+        self.recording_countdown_running = False
+        self.recording_ended_showing = True
+
+        if self.recording_header_label is not None:
+            self.recording_header_label.pack_forget()
+
+        if self.recording_main_label is not None:
+            self.recording_main_label.configure(
+                text=RECORDING_ENDED_MESSAGE,
+                font=("Arial", 16, "bold"),
+                justify="center",
+            )
+
+        self._recording_light_visible = True
+        self._recording_light_rebuild_square()
+        self.lift_recording_overlay()
+
+        self.recording_ended_auto_dismiss_job_id = self.root.after(
+            self.recording_ended_hold_ms,
+            self.recording_ended_auto_dismiss_fire,
+        )
+
+    def dismiss_recording_ended_message(self):
+        if not self.recording_ended_showing:
+            return
+
+        self.cancel_recording_ended_auto_dismiss()
+        self.cancel_recording_timers()
+        self.recording_ended_showing = False
+        self.recording_ui_active = False
+        self.recording_countdown_running = False
+
+        if self.recording_toplevel is not None:
+            try:
+                self.recording_toplevel.withdraw()
+            except Exception:
+                pass
+
+    def schedule_claim_focus(self):
+        for delay_ms in (0, 50, 150, 400, 800, 1500, 3000, 6000, 12000, 20000):
+            self.root.after(delay_ms, self.claim_keyboard_focus)
+
+    def claim_keyboard_focus(self):
+        if self.replay_video_active:
+            return
+
+        try:
+            self.root.update_idletasks()
+            self.root.lift()
+            self.root.attributes("-topmost", True)
+            self.root.after(150, self._release_topmost_brief)
+        except Exception:
+            pass
+
+        if os.name == "nt":
+            try:
+                hwnd = int(self.root.winfo_id())
+                win32_force_foreground(hwnd)
+            except Exception:
+                pass
+
+        try:
+            self.root.focus_force()
+            self.root.focus_set()
+            self.canvas.focus_set()
+            self.canvas.focus_force()
+        except Exception:
+            pass
+
+    def _release_topmost_brief(self):
+        try:
+            self.root.attributes("-topmost", False)
+        except Exception:
+            pass
+
+    def start_focus_watchdog(self):
+        self.cancel_focus_watchdog()
+        self.focus_watchdog_ticks_left = FOCUS_WATCHDOG_TICKS
+        self.focus_watchdog_job_id = self.root.after(
+            FOCUS_WATCHDOG_INTERVAL_MS,
+            self.focus_watchdog_tick,
+        )
+
+    def cancel_focus_watchdog(self):
+        if self.focus_watchdog_job_id is not None:
+            try:
+                self.root.after_cancel(self.focus_watchdog_job_id)
+            except Exception:
+                pass
+            self.focus_watchdog_job_id = None
+
+    def focus_watchdog_tick(self):
+        self.focus_watchdog_job_id = None
+
+        if self.focus_watchdog_ticks_left <= 0:
+            return
+
+        self.focus_watchdog_ticks_left -= 1
+
+        if not self.replay_video_active:
+            self.claim_keyboard_focus()
+
+        self.focus_watchdog_job_id = self.root.after(
+            FOCUS_WATCHDOG_INTERVAL_MS,
+            self.focus_watchdog_tick,
+        )
+
+    def schedule_synthetic_focus_clicks(self):
+        if not self.synthetic_focus_click:
+            return
+
+        for delay_ms in (2500, 6000, 12000):
+            self.root.after(delay_ms, self.try_synthetic_focus_click)
+
+    def try_synthetic_focus_click(self):
+        if not self.synthetic_focus_click or self.replay_video_active:
+            return
+
+        if self._synthetic_click_attempts >= 3:
+            return
+
+        self._synthetic_click_attempts += 1
+
+        try:
+            hwnd = int(self.root.winfo_id())
+            if os.name == "nt":
+                win32_force_foreground(hwnd)
+            win32_synthetic_click_window_center(hwnd)
+            self.claim_keyboard_focus()
+        except Exception:
+            pass
+
     def close_app(self):
         self.clear_pending_screensaver_jobs()
         self.cancel_replay_video_launch()
         self.cancel_replay_video_poll()
+        self.cancel_focus_watchdog()
+        self.cancel_recording_timers()
+        self.cancel_recording_ended_auto_dismiss()
         self.stop_replay_video_process()
         self.hide_video_host()
         self.cleanup_mpv_input_conf()
+        if self.recording_toplevel is not None:
+            try:
+                self.recording_toplevel.destroy()
+            except Exception:
+                pass
+            self.recording_toplevel = None
         self.root.destroy()
 
     def schedule_idle_check(self):
@@ -203,6 +897,8 @@ class ScoreboardApp:
             not self.screensaver_active
             and not self.showing_replay
             and not self.is_transitioning
+            and not self.recording_ui_active
+            and not self.black_screen_active
             and idle_ms >= IDLE_TIMEOUT_MS
         ):
             self.start_screensaver()
@@ -281,6 +977,7 @@ class ScoreboardApp:
         self.current_screensaver_frame = None
         self.canvas.itemconfig(self.overlay_canvas, image=self.current_screensaver_photo)
         self.canvas.tag_raise(self.overlay_canvas)
+        self.lift_recording_overlay()
 
     def show_next_screensaver_image(self):
         if not self.screensaver_active:
@@ -355,6 +1052,7 @@ class ScoreboardApp:
         self.current_screensaver_photo = frames[index]
         self.canvas.itemconfig(self.overlay_canvas, image=self.current_screensaver_photo)
         self.canvas.tag_raise(self.overlay_canvas)
+        self.lift_recording_overlay()
 
         self.screensaver_fade_job_id = self.root.after(
             delay,
@@ -439,8 +1137,11 @@ class ScoreboardApp:
 
         # Keep overlay on top
         self.canvas.tag_raise(self.overlay_canvas)
+        self.lift_recording_overlay()
 
     def update_score(self, team, delta):
+        if self.black_screen_active:
+            return
         if self.showing_replay or self.is_transitioning:
             return
 
@@ -455,6 +1156,11 @@ class ScoreboardApp:
     def reset_scores(self):
         if self.showing_replay or self.is_transitioning:
             return
+
+        if self.black_screen_active:
+            self.black_screen_active = False
+            self._hide_black_screen_cover()
+            self.lift_recording_overlay()
 
         self.score_a = 0
         self.score_b = 0
@@ -476,6 +1182,7 @@ class ScoreboardApp:
             self.fade_overlay_in()
 
     def fade_overlay_in(self):
+        self._hide_black_screen_cover()
         self.is_transitioning = True
         self.run_overlay_fade(
             start_alpha=0,
@@ -505,9 +1212,16 @@ class ScoreboardApp:
         self.cancel_replay_video_poll()
         self.stop_replay_video_process()
         self.hide_video_host()
+        self.show_canvas_after_video()
+        self.restore_canvas_after_video()
+        self.current_overlay_photo = self.overlay_photo
+        self.canvas.itemconfig(self.overlay_canvas, image=self.current_overlay_photo)
         self.showing_replay = False
         self.replay_video_active = False
         self.is_transitioning = False
+        if self.black_screen_active:
+            self._show_black_screen_cover()
+        self.lift_recording_overlay()
 
     def run_overlay_fade(self, start_alpha, end_alpha, steps, delay, on_complete):
         self.fade_frames = []
@@ -530,6 +1244,7 @@ class ScoreboardApp:
         self.current_overlay_photo = self.fade_frames[index]
         self.canvas.itemconfig(self.overlay_canvas, image=self.current_overlay_photo)
         self.canvas.tag_raise(self.overlay_canvas)
+        self.lift_recording_overlay()
 
         self.root.after(
             delay,
@@ -585,6 +1300,7 @@ class ScoreboardApp:
                     "--fs",
                     "--force-window=yes",
                     "--keep-open=yes",
+                    "--loop-file=inf",
                     "--ontop",
                     "--no-input-terminal",
                     f"--input-conf={input_conf_path}",
@@ -597,7 +1313,6 @@ class ScoreboardApp:
             return
 
         self.replay_video_active = True
-        self.fade_replay_slate_to_video()
         self.schedule_replay_video_poll()
 
     def spawn_mpv_embedded(self, mpv_executable, input_conf_path):
@@ -615,6 +1330,7 @@ class ScoreboardApp:
                     f"--wid={host_id}",
                     "--no-border",
                     "--keep-open=yes",
+                    "--loop-file=inf",
                     "--no-input-terminal",
                     "--hwdec=no",
                     f"--input-conf={input_conf_path}",
@@ -628,7 +1344,7 @@ class ScoreboardApp:
             return
 
         self.replay_video_active = True
-        self.fade_replay_slate_to_video()
+        self.handoff_replay_to_embedded_video()
         self.schedule_replay_video_poll()
 
     def prepare_canvas_for_video_transition(self):
@@ -666,17 +1382,7 @@ class ScoreboardApp:
         self.canvas.tag_raise(self.overlay_canvas)
         self.ensure_window_opaque()
 
-    def fade_replay_slate_to_video(self):
-        delay = max(1, REPLAY_TO_VIDEO_FADE_DURATION_MS // REPLAY_TO_VIDEO_FADE_STEPS)
-        self.run_overlay_fade(
-            start_alpha=255,
-            end_alpha=0,
-            steps=REPLAY_TO_VIDEO_FADE_STEPS,
-            delay=delay,
-            on_complete=self.finish_replay_slate_to_video
-        )
-
-    def finish_replay_slate_to_video(self):
+    def handoff_replay_to_embedded_video(self):
         self.ensure_window_opaque()
         self.current_overlay_photo = self.overlay_photo
         self.canvas.itemconfig(self.overlay_canvas, image=self.current_overlay_photo)
@@ -749,8 +1455,6 @@ class ScoreboardApp:
     def stop_replay_video_and_return(self):
         self.cancel_replay_video_launch()
         self.cancel_replay_video_poll()
-        self.stop_replay_video_process()
-        self.replay_video_active = False
 
         if self.showing_replay and not self.is_transitioning:
             self.hide_video_host()
@@ -759,6 +1463,13 @@ class ScoreboardApp:
             self.current_overlay_photo = ImageTk.PhotoImage(self.replay_image)
             self.canvas.itemconfig(self.overlay_canvas, image=self.current_overlay_photo)
             self.canvas.tag_raise(self.overlay_canvas)
+            self.root.update_idletasks()
+            self.root.update()
+
+        self.stop_replay_video_process()
+        self.replay_video_active = False
+
+        if self.showing_replay and not self.is_transitioning:
             self.root.after(REPLAY_RETURN_SLATE_HOLD_MS, self.fade_overlay_out)
 
     def stop_replay_video_process(self):
@@ -812,6 +1523,8 @@ class ScoreboardApp:
             self.current_overlay_photo = ImageTk.PhotoImage(self.replay_image)
             self.canvas.itemconfig(self.overlay_canvas, image=self.current_overlay_photo)
             self.canvas.tag_raise(self.overlay_canvas)
+            self.root.update_idletasks()
+            self.root.update()
             self.root.after(REPLAY_RETURN_SLATE_HOLD_MS, self.fade_overlay_out)
 
     def save_state(self):
