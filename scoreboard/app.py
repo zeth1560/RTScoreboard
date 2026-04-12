@@ -11,7 +11,7 @@ from pathlib import Path
 from PIL import Image, ImageTk
 
 from scoreboard.config.settings import Settings, load_settings
-from scoreboard.hotkeys import bind_recording_hotkey
+from scoreboard.hotkeys import bind_recording_hotkey, bind_recording_hotkey_global
 from scoreboard.persistence.score_store import load_scores, save_scores
 from scoreboard.platform.win32 import win32_force_foreground, win32_synthetic_click_window_center
 from scoreboard.recording_overlay import RecordingOverlay
@@ -109,6 +109,7 @@ class ScoreboardApp:
             self.scheduler,
             self.screen_width,
             self.screen_height,
+            on_dismiss_chord=self._on_recording_dismiss_chord,
         )
 
         self.screensaver = Screensaver(
@@ -170,19 +171,33 @@ class ScoreboardApp:
         )
         root.bind("r", lambda e: self.on_streamdeck_input(self.reset_scores))
         root.bind("i", lambda e: self.on_streamdeck_input(self.toggle_replay))
-        bind_recording_hotkey(
+        # Chords use bind_all so they still work when the recording Toplevel is focused.
+        bind_recording_hotkey_global(
             root,
             self.settings.recording_start_hotkey,
             "Ctrl+Shift+g",
             lambda e: self.on_streamdeck_input(self.on_recording_start_hotkey),
         )
+        bind_recording_hotkey_global(
+            root,
+            self.settings.recording_dismiss_hotkey,
+            "Ctrl+Alt+m",
+            self._on_recording_dismiss_chord,
+        )
+        # Extra binds: main canvas often holds focus; root as fallback.
+        bind_recording_hotkey(
+            self.canvas,
+            self.settings.recording_dismiss_hotkey,
+            "Ctrl+Alt+m",
+            self._on_recording_dismiss_chord,
+        )
         bind_recording_hotkey(
             root,
             self.settings.recording_dismiss_hotkey,
             "Ctrl+Alt+m",
-            lambda e: self.on_streamdeck_input(self.on_recording_dismiss_hotkey),
+            self._on_recording_dismiss_chord,
         )
-        bind_recording_hotkey(
+        bind_recording_hotkey_global(
             root,
             self.settings.black_screen_hotkey,
             "Ctrl+Shift+b",
@@ -224,6 +239,13 @@ class ScoreboardApp:
         if not self.recording_overlay.can_start_countdown_from_hotkey():
             return
         self.recording_overlay.start_or_restart_countdown()
+
+    def _on_recording_dismiss_chord(self, _event: tk.Event | None = None) -> None:
+        """Dismiss chord: do not let screensaver-only short-circuit skip dismiss."""
+        self.last_input_ms = int(time.monotonic() * 1000)
+        if self.screensaver.is_active():
+            self.screensaver.stop()
+        self.on_recording_dismiss_hotkey()
 
     def on_recording_dismiss_hotkey(self) -> None:
         if not self.recording_overlay.can_dismiss_ended_from_hotkey():
@@ -268,6 +290,8 @@ class ScoreboardApp:
 
     def claim_keyboard_focus(self) -> None:
         if self.replay.replay_video_active:
+            return
+        if self.recording_overlay.is_ended_message_showing():
             return
 
         if self.settings.scoreboard_debug:
@@ -363,6 +387,8 @@ class ScoreboardApp:
 
     def try_synthetic_focus_click(self) -> None:
         if not self.settings.synthetic_focus_click or self.replay.replay_video_active:
+            return
+        if self.recording_overlay.is_ended_message_showing():
             return
 
         if self._synthetic_click_attempts >= 3:
