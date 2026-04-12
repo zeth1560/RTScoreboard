@@ -1,0 +1,11 @@
+Pilot restart (Windows)
+
+1. Close the scoreboard window or press Escape.
+2. From the scoreboard project folder, run:
+     python main.py
+   Or double-click: pilot\restart-scoreboard.cmd
+
+Logs are written to stderr (the console). For long runs, redirect to a file, e.g.:
+     python main.py 2>> scoreboard-pilot.log
+
+Set SCOREBOARD_DEBUG=1 in .env for verbose diagnostics during troubleshooting.

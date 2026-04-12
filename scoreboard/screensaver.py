@@ -1,0 +1,231 @@
+"""Idle slideshow screensaver: image discovery, cover scaling, fades, scheduling."""
+
+from __future__ import annotations
+
+import logging
+import os
+import random
+from typing import Callable
+
+import tkinter as tk
+from PIL import Image, ImageTk
+
+from scoreboard.config.settings import Settings, SUPPORTED_IMAGE_EXTENSIONS
+from scoreboard.scheduler import AfterScheduler, JobGroup
+
+_LOG = logging.getLogger(__name__)
+
+
+class Screensaver:
+    def __init__(
+        self,
+        root: tk.Tk,
+        canvas: tk.Canvas,
+        overlay_canvas_id: int,
+        settings: Settings,
+        scheduler: AfterScheduler,
+        screen_width: int,
+        screen_height: int,
+        lift_recording_overlay: Callable[[], None],
+    ) -> None:
+        self._root = root
+        self._canvas = canvas
+        self._overlay_canvas_id = overlay_canvas_id
+        self._settings = settings
+        self._scheduler = scheduler
+        self._screen_width = screen_width
+        self._screen_height = screen_height
+        self._lift_recording_overlay = lift_recording_overlay
+
+        self._active = False
+        self._jobs = JobGroup(scheduler)
+        self._transparent_overlay_photo: ImageTk.PhotoImage | None = None
+        self._current_photo: ImageTk.PhotoImage | None = None
+        self._current_frame: Image.Image | None = None
+        self._fade_frames_hold: list[ImageTk.PhotoImage] = []
+
+    def set_transparent_overlay_photo(self, photo: ImageTk.PhotoImage) -> None:
+        self._transparent_overlay_photo = photo
+
+    def is_active(self) -> bool:
+        return self._active
+
+    def on_screen_resize(self, width: int, height: int) -> None:
+        self._screen_width = width
+        self._screen_height = height
+
+    def _clear_jobs(self) -> None:
+        self._jobs.cancel_all()
+
+    def stop(self) -> None:
+        if not self._active:
+            return
+        _LOG.info("Screensaver: stopping")
+        self._active = False
+        self._clear_jobs()
+        if self._transparent_overlay_photo is not None:
+            self._current_photo = self._transparent_overlay_photo
+            self._current_frame = None
+            self._canvas.itemconfig(
+                self._overlay_canvas_id,
+                image=self._current_photo,
+            )
+            self._canvas.tag_raise(self._overlay_canvas_id)
+            self._lift_recording_overlay()
+
+    def start(self) -> None:
+        if not self._settings.slideshow_enabled:
+            _LOG.debug("Screensaver: start ignored (SLIDESHOW_ENABLED=0)")
+            return
+        if self._active:
+            return
+        _LOG.info("Screensaver: starting")
+        self._active = True
+        self._current_frame = None
+        self._show_next_image()
+
+    def get_slideshow_images(self) -> list[str]:
+        d = self._settings.slideshow_dir
+        if not d or not os.path.isdir(d):
+            return []
+        files: list[str] = []
+        try:
+            for filename in os.listdir(d):
+                path = os.path.join(d, filename)
+                if os.path.isfile(path) and filename.lower().endswith(
+                    SUPPORTED_IMAGE_EXTENSIONS
+                ):
+                    files.append(path)
+        except OSError:
+            _LOG.exception("Screensaver: failed to list slideshow directory %s", d)
+            return []
+        return files
+
+    def load_and_cover_image(self, image_path: str) -> Image.Image | None:
+        try:
+            with Image.open(image_path) as img:
+                source = img.convert("RGBA")
+        except OSError:
+            _LOG.warning("Screensaver: could not open image %s", image_path, exc_info=True)
+            return None
+
+        src_w, src_h = source.size
+        if src_w == 0 or src_h == 0:
+            return None
+
+        scale = max(self._screen_width / src_w, self._screen_height / src_h)
+        new_w = int(src_w * scale)
+        new_h = int(src_h * scale)
+
+        resized = source.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+        crop_x = max(0, (new_w - self._screen_width) // 2)
+        crop_y = max(0, (new_h - self._screen_height) // 2)
+
+        return resized.crop(
+            (
+                crop_x,
+                crop_y,
+                crop_x + self._screen_width,
+                crop_y + self._screen_height,
+            )
+        )
+
+    def _show_next_image(self) -> None:
+        if not self._active:
+            return
+
+        paths = self.get_slideshow_images()
+        if not paths:
+            self._jobs.schedule(
+                self._settings.slideshow_interval_ms,
+                self._show_next_image,
+                name="screensaver_retry_empty",
+            )
+            return
+
+        selected = random.choice(paths)
+        try:
+            next_frame = self.load_and_cover_image(selected)
+            if next_frame is None:
+                raise ValueError("Invalid image dimensions")
+
+            if self._current_frame is None:
+                self._fade_in(next_frame)
+            else:
+                self._fade_between(self._current_frame, next_frame)
+        except Exception:
+            _LOG.exception("Screensaver: error loading %s", selected)
+            self._jobs.schedule(
+                self._settings.slideshow_interval_ms,
+                self._show_next_image,
+                name="screensaver_retry_after_error",
+            )
+
+    def _fade_in(self, next_frame: Image.Image) -> None:
+        steps = self._settings.slideshow_fade_steps
+        frames: list[ImageTk.PhotoImage] = []
+        for i in range(steps + 1):
+            alpha = int(255 * (i / steps))
+            frame = next_frame.copy()
+            frame.putalpha(alpha)
+            frames.append(ImageTk.PhotoImage(frame))
+
+        self._fade_frames_hold = frames
+        delay = max(1, self._settings.slideshow_fade_duration_ms // steps)
+        self._animate_frames(frames, delay, lambda: self._finish_frame(next_frame))
+
+    def _fade_between(self, from_frame: Image.Image, to_frame: Image.Image) -> None:
+        steps = self._settings.slideshow_fade_steps
+        frames: list[ImageTk.PhotoImage] = []
+        for i in range(steps + 1):
+            blend_amount = i / steps
+            blended = Image.blend(from_frame, to_frame, blend_amount)
+            frames.append(ImageTk.PhotoImage(blended))
+
+        self._fade_frames_hold = frames
+        delay = max(1, self._settings.slideshow_fade_duration_ms // steps)
+        self._animate_frames(frames, delay, lambda: self._finish_frame(to_frame))
+
+    def _animate_frames(
+        self,
+        frames: list[ImageTk.PhotoImage],
+        delay: int,
+        on_complete: Callable[[], None],
+        index: int = 0,
+    ) -> None:
+        if not self._active:
+            return
+
+        if index >= len(frames):
+            on_complete()
+            return
+
+        self._current_photo = frames[index]
+        self._canvas.itemconfig(
+            self._overlay_canvas_id,
+            image=self._current_photo,
+        )
+        self._canvas.tag_raise(self._overlay_canvas_id)
+        self._lift_recording_overlay()
+
+        self._jobs.schedule(
+            delay,
+            lambda: self._animate_frames(frames, delay, on_complete, index + 1),
+            name="screensaver_fade_step",
+        )
+
+    def _finish_frame(self, frame: Image.Image) -> None:
+        if not self._active:
+            return
+        self._current_frame = frame
+        self._jobs.schedule(
+            self._settings.slideshow_interval_ms,
+            self._show_next_image,
+            name="screensaver_next_slide",
+        )
+
+    def teardown(self) -> None:
+        self._clear_jobs()
+        self._active = False
+        self._fade_frames_hold.clear()
