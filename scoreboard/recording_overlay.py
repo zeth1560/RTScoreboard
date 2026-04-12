@@ -188,7 +188,12 @@ class RecordingOverlay:
         self.dismiss_ended_message()
 
     def lift(self) -> None:
+        """Keep overlay stacked above content when visible. No-op when dismissed (withdrawn)."""
         if self._toplevel is None:
+            return
+        if self._state == RecordingOverlayState.HIDDEN:
+            # Critical: lift()/wm raise on a withdrawn Toplevel remaps the window on Windows,
+            # so any draw_scores/replay/screensaver tick would resurrect the "dismissed" box.
             return
         try:
             self._toplevel.geometry(self._geometry())
@@ -375,4 +380,10 @@ class RecordingOverlay:
     def on_screen_resize(self, screen_width: int, screen_height: int) -> None:
         self._screen_width = screen_width
         self._screen_height = screen_height
-        self.lift()
+        if self._state != RecordingOverlayState.HIDDEN:
+            self.lift()
+        elif self._toplevel is not None:
+            try:
+                self._toplevel.geometry(self._geometry())
+            except tk.TclError:
+                pass
