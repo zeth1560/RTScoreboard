@@ -7,18 +7,14 @@ import logging
 import os
 import tkinter as tk
 import tkinter.font as tkfont
+from collections.abc import Callable
 
 from PIL import Image, ImageTk
 
 from scoreboard.config.settings import Settings
-from scoreboard.hotkeys import bind_recording_hotkey
 from scoreboard.scheduler import AfterScheduler
 
 _LOG = logging.getLogger(__name__)
-
-# Label-based “on-air” indicator avoids Canvas repaints redrawing sibling Labels on Windows.
-_BULB_RECORDING = "\u25cf"  # ●
-_BULB_ENDED = "\u25a0"  # ■
 
 
 class RecordingOverlayState(enum.Enum):
@@ -218,8 +214,28 @@ class RecordingOverlay:
         return True
 
     def _ensure_widgets(self) -> None:
-        if self._toplevel is not None:
+        if self._toplevel is not None and self._light_canvas is not None:
             return
+        if self._toplevel is not None:
+            _LOG.warning(
+                "Recording overlay: discarding incomplete Toplevel and rebuilding widgets"
+            )
+            try:
+                self._toplevel.destroy()
+            except tk.TclError:
+                pass
+            self._toplevel = None
+            self._outer = None
+            self._canvas = None
+            self._body_inner = None
+            self._text_col = None
+            self._header_label = None
+            self._main_label = None
+            self._bg_image_id = None
+            self._timer_text_id = None
+            self._light_canvas = None
+            self._light_shape_id = None
+            self._invalidate_graphic_photos()
 
         win = tk.Toplevel(self._root)
         self._toplevel = win
@@ -249,14 +265,13 @@ class RecordingOverlay:
         body = tk.Frame(outer, bg="black")
         self._body_inner = body
 
-        self._bulb_label = tk.Label(
+        light_canvas = tk.Canvas(
             body,
-            text=_BULB_RECORDING,
-            fg="#cc0000",
+            width=48,
+            height=48,
             bg="black",
-            font=("Arial", 28),
-            width=1,
-            anchor="center",
+            highlightthickness=0,
+            highlightbackground="black",
         )
         self._light_canvas = light_canvas
         self._rebuild_circle()
@@ -556,9 +571,13 @@ class RecordingOverlay:
         if self._state == RecordingOverlayState.SESSION_END_INFO:
             return
         if self._state != RecordingOverlayState.COUNTING:
-            if self._bulb_label is not None:
+            if self._light_canvas is not None and self._light_shape_id is not None:
                 try:
-                    self._light_canvas.itemconfig(self._light_shape_id, fill="#cc0000")
+                    self._light_canvas.itemconfig(
+                        self._light_shape_id,
+                        fill="#cc0000",
+                        outline="#660000",
+                    )
                 except tk.TclError:
                     _LOG.debug("Recording light itemconfig failed", exc_info=True)
             return
@@ -580,11 +599,16 @@ class RecordingOverlay:
         self._schedule_blink()
 
     def _apply_light_color(self) -> None:
-        if self._bulb_label is None:
+        if self._light_canvas is None or self._light_shape_id is None:
             return
-        fg = "#cc0000" if self._light_visible else "#330000"
+        fill = "#cc0000" if self._light_visible else "#330000"
+        outline = "#660000" if self._light_visible else "#220000"
         try:
-            self._bulb_label.configure(fg=fg)
+            self._light_canvas.itemconfig(
+                self._light_shape_id,
+                fill=fill,
+                outline=outline,
+            )
         except tk.TclError:
             _LOG.debug("Recording light apply color failed", exc_info=True)
 

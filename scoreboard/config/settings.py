@@ -35,6 +35,8 @@ REPLAY_RETURN_SLATE_HOLD_MS = 350
 REPLAY_TRANSITION_TIMEOUT_MS = 90_000
 # After slate is shown, if video never becomes active this long after launch delay, recover (ms)
 REPLAY_SLATE_STUCK_TIMEOUT_MS = 90_000
+# Refuse mpv if INSTANTREPLAY.mp4 mtime is older than this (seconds). 0 = skip freshness check.
+DEFAULT_REPLAY_FILE_MAX_AGE_SECONDS = 120
 FOCUS_WATCHDOG_INTERVAL_MS = 3000
 # ~12.5 minutes at default interval (250 * 3s); pilot can override via FOCUS_WATCHDOG_TICKS.
 FOCUS_WATCHDOG_TICKS = 250
@@ -164,6 +166,7 @@ class Settings:
     heartbeat_interval_minutes: int = 0
     replay_transition_timeout_ms: int = REPLAY_TRANSITION_TIMEOUT_MS
     replay_slate_stuck_timeout_ms: int = REPLAY_SLATE_STUCK_TIMEOUT_MS
+    replay_file_max_age_seconds: int = DEFAULT_REPLAY_FILE_MAX_AGE_SECONDS
 
 
 def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
@@ -348,6 +351,16 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         minimum=5000,
     )
 
+    replay_file_max_age_seconds = _parse_positive_int(
+        g(
+            "REPLAY_FILE_MAX_AGE_SECONDS",
+            str(DEFAULT_REPLAY_FILE_MAX_AGE_SECONDS),
+        ),
+        DEFAULT_REPLAY_FILE_MAX_AGE_SECONDS,
+        "REPLAY_FILE_MAX_AGE_SECONDS",
+        minimum=0,
+    )
+
     focus_watchdog_interval_ms = _parse_positive_int(
         g("FOCUS_WATCHDOG_INTERVAL_MS", str(FOCUS_WATCHDOG_INTERVAL_MS)),
         FOCUS_WATCHDOG_INTERVAL_MS,
@@ -409,6 +422,7 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         heartbeat_interval_minutes=heartbeat_interval_minutes,
         replay_transition_timeout_ms=transition_timeout,
         replay_slate_stuck_timeout_ms=slate_stuck_timeout,
+        replay_file_max_age_seconds=replay_file_max_age_seconds,
         focus_watchdog_interval_ms=focus_watchdog_interval_ms,
         focus_watchdog_ticks=focus_watchdog_ticks,
     )
@@ -478,6 +492,7 @@ def summarize_settings(settings: Settings) -> str:
         f"heartbeat_interval_minutes={settings.heartbeat_interval_minutes}",
         f"replay_transition_timeout_ms={settings.replay_transition_timeout_ms}",
         f"replay_slate_stuck_timeout_ms={settings.replay_slate_stuck_timeout_ms}",
+        f"replay_file_max_age_seconds={settings.replay_file_max_age_seconds}",
         f"focus_watchdog_ticks={settings.focus_watchdog_ticks}",
         f"focus_watchdog_interval_ms={settings.focus_watchdog_interval_ms}",
     ]

@@ -8,7 +8,9 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 import tkinter as tk
+from datetime import datetime
 from typing import Callable
 
 from PIL import Image, ImageTk
@@ -17,6 +19,14 @@ from scoreboard.config.settings import Settings
 from scoreboard.scheduler import AfterScheduler
 
 _LOG = logging.getLogger(__name__)
+
+# Shown whenever replay cannot run after the operator invokes it (logs stay specific).
+REPLAY_UNAVAILABLE_USER_MESSAGE = (
+    "Sorry…the squirrels that make this contraption work stayed up partying way too late "
+    "last night, and they are all currently either asleep, hungover, or puking in the "
+    "restroom. We will give them a stern talking to, and hopefully have better luck with "
+    "this doohickey next time."
+)
 
 
 class ReplayPhase(enum.Enum):
@@ -76,6 +86,11 @@ class ReplayController:
 
         self._fade_frames: list[ImageTk.PhotoImage] = []
         self._current_overlay_photo: ImageTk.PhotoImage = transparent_overlay_photo
+
+        self._replay_toast_win: tk.Toplevel | None = None
+        self._replay_toast_dismiss_job: str | None = None
+        self._last_replayed_file_mtime: float | None = None
+        self._replay_pending_mtime: float | None = None
 
     @property
     def phase(self) -> ReplayPhase:
@@ -158,6 +173,7 @@ class ReplayController:
         Safe to call after launch failure, stuck watchdog, or partial teardown.
         """
         _LOG.log(log_level, "Replay: restoring normal scoreboard (reason=%s)", reason)
+        self._replay_pending_mtime = None
         self._cancel_all_replay_timers()
         self.stop_replay_video_process()
         self.hide_video_host()
@@ -204,6 +220,7 @@ class ReplayController:
             phase_label,
             self._settings.replay_transition_timeout_ms,
         )
+        self._show_replay_unavailable_toast()
         self.restore_normal_scoreboard_state(
             f"transition_timeout:{phase_label}",
             log_level=logging.ERROR,
@@ -232,10 +249,14 @@ class ReplayController:
             self._settings.replay_video_start_delay_ms
             + self._settings.replay_slate_stuck_timeout_ms,
         )
+        self._show_replay_unavailable_toast()
         self.restore_normal_scoreboard_state("slate_stuck_no_video", log_level=logging.ERROR)
 
     def teardown(self) -> None:
         _LOG.info("Replay: teardown")
+        self._dismiss_replay_unavailable_toast()
+        self._last_replayed_file_mtime = None
+        self._replay_pending_mtime = None
         self._cancel_all_replay_timers()
         self.stop_replay_video_process()
         self.hide_video_host()
@@ -259,6 +280,66 @@ class ReplayController:
         except tk.TclError:
             _LOG.debug("Replay teardown: overlay reset skipped", exc_info=True)
         self._cleanup_mpv_input_conf()
+
+    def _dismiss_replay_unavailable_toast(self) -> None:
+        self._scheduler.cancel(self._replay_toast_dismiss_job)
+        self._replay_toast_dismiss_job = None
+        if self._replay_toast_win is not None:
+            try:
+                self._replay_toast_win.destroy()
+            except tk.TclError:
+                pass
+            self._replay_toast_win = None
+
+    def _show_replay_unavailable_toast(self) -> None:
+        """Brief non-blocking on-screen notice; does not grab focus or block the event loop."""
+        self._dismiss_replay_unavailable_toast()
+        try:
+            win = tk.Toplevel(self._root)
+            win.overrideredirect(True)
+            try:
+                win.attributes("-topmost", True)
+            except tk.TclError:
+                _LOG.debug("replay toast topmost failed", exc_info=True)
+            win.configure(bg="#1a1a1a")
+            sw0 = self._root.winfo_screenwidth()
+            wrap = min(960, max(320, sw0 - 120))
+            frame = tk.Frame(win, bg="#1a1a1a", highlightthickness=1, highlightbackground="#555555")
+            frame.pack(fill="both", expand=True)
+            tk.Label(
+                frame,
+                text=REPLAY_UNAVAILABLE_USER_MESSAGE,
+                fg="#f0f0f0",
+                bg="#1a1a1a",
+                font=("Arial", 14),
+                justify="center",
+                wraplength=wrap,
+                padx=26,
+                pady=20,
+            ).pack()
+            win.update_idletasks()
+            sw = self._root.winfo_screenwidth()
+            sh = self._root.winfo_screenheight()
+            ww = win.winfo_reqwidth()
+            wh = win.winfo_reqheight()
+            x = max(0, (sw - ww) // 2)
+            y = max(0, (sh - wh) // 2)
+            win.geometry(f"+{x}+{y}")
+        except tk.TclError:
+            _LOG.debug("replay unavailable toast failed", exc_info=True)
+            return
+
+        self._replay_toast_win = win
+        self._replay_toast_dismiss_job = self._scheduler.schedule(
+            10_000,
+            self._dismiss_replay_unavailable_toast,
+            name="replay_unavailable_toast_dismiss",
+        )
+
+    def _commit_replay_file_played(self) -> None:
+        if self._replay_pending_mtime is not None:
+            self._last_replayed_file_mtime = self._replay_pending_mtime
+            self._replay_pending_mtime = None
 
     def toggle_replay(self) -> None:
         if not self._settings.replay_enabled:
@@ -284,6 +365,7 @@ class ReplayController:
 
         if self._showing_replay:
             self.cancel_replay_video_launch()
+            self.cancel_return_slate()
             self._fade_overlay_out()
         else:
             self._fade_overlay_in()
@@ -328,6 +410,7 @@ class ReplayController:
             _LOG.info("Replay: fade-out ignored (already idle)")
             return
         _LOG.info("Replay: fade-out from slate starting")
+        self.cancel_return_slate()
         self.cancel_slate_stuck_watchdog()
         self._set_phase(ReplayPhase.FADING_OUT)
         self._is_transitioning = True
@@ -431,20 +514,88 @@ class ReplayController:
             return
 
         path = self._settings.replay_video_path
-        if not path or not os.path.isfile(path):
-            _LOG.error("Replay: launch failed — video file missing: %s", path)
-            self.restore_normal_scoreboard_state("missing_video_file", log_level=logging.ERROR)
+        exists = bool(path and os.path.isfile(path))
+        size_bytes = 0
+        mtime_iso = "n/a"
+        mtime_epoch: float | None = None
+        age_sec: float | None = None
+        if exists:
+            try:
+                st = os.stat(path)
+                size_bytes = int(st.st_size)
+                mtime_epoch = float(st.st_mtime)
+                mtime_iso = datetime.fromtimestamp(st.st_mtime).isoformat(
+                    sep="T",
+                    timespec="seconds",
+                )
+                age_sec = max(0.0, time.time() - st.st_mtime)
+            except OSError:
+                exists = False
+                size_bytes = 0
+                mtime_iso = "n/a"
+                mtime_epoch = None
+                age_sec = None
+                _LOG.warning("Replay file stat failed for %s", path)
+
+        _LOG.info(
+            "Replay file check: exists=%s size_bytes=%s mtime=%s",
+            exists,
+            size_bytes,
+            mtime_iso,
+        )
+
+        if not exists:
+            _LOG.warning("Replay unavailable: no fresh replay file detected")
+            self._show_replay_unavailable_toast()
+            self.restore_normal_scoreboard_state("missing_video_file", log_level=logging.WARNING)
             return
+
+        if size_bytes == 0:
+            _LOG.warning(
+                "Replay unavailable: no fresh replay file detected (file is empty)",
+            )
+            self._show_replay_unavailable_toast()
+            self.restore_normal_scoreboard_state("replay_file_empty", log_level=logging.WARNING)
+            return
+
+        max_age = self._settings.replay_file_max_age_seconds
+        assert mtime_epoch is not None and age_sec is not None
+        if max_age > 0 and age_sec > max_age:
+            _LOG.warning(
+                "Replay skipped: file exists but is stale (age_seconds=%s max=%s)",
+                int(age_sec),
+                max_age,
+            )
+            self._show_replay_unavailable_toast()
+            self.restore_normal_scoreboard_state("replay_file_stale", log_level=logging.WARNING)
+            return
+
+        if (
+            self._last_replayed_file_mtime is not None
+            and mtime_epoch == self._last_replayed_file_mtime
+        ):
+            _LOG.warning("Replay warning: file unchanged since last playback")
+
+        self._replay_pending_mtime = mtime_epoch
+        _LOG.info(
+            "Replay launch approved: fresh file age_seconds=%s size_bytes=%s",
+            int(age_sec),
+            size_bytes,
+        )
 
         mpv_executable = self._resolve_mpv_executable()
         if mpv_executable is None:
             _LOG.error("Replay: launch failed — mpv not found")
+            self._replay_pending_mtime = None
+            self._show_replay_unavailable_toast()
             self.restore_normal_scoreboard_state("mpv_not_found", log_level=logging.ERROR)
             return
 
         input_conf_path = self._ensure_mpv_input_conf()
         if input_conf_path is None:
             _LOG.error("Replay: launch failed — could not write mpv input conf")
+            self._replay_pending_mtime = None
+            self._show_replay_unavailable_toast()
             self.restore_normal_scoreboard_state("mpv_input_conf_failed", log_level=logging.ERROR)
             return
 
@@ -473,6 +624,7 @@ class ReplayController:
                 self._showing_replay,
                 self._replay_video_active,
             )
+            self._replay_pending_mtime = None
             return
 
         try:
@@ -492,11 +644,14 @@ class ReplayController:
         except OSError:
             _LOG.exception("Replay: mpv spawn failed (fullscreen); restoring scoreboard")
             self._replay_video_process = None
+            self._replay_pending_mtime = None
+            self._show_replay_unavailable_toast()
             self.restore_normal_scoreboard_state("mpv_spawn_failed_fullscreen", log_level=logging.ERROR)
             return
 
         self.cancel_slate_stuck_watchdog()
         _LOG.info("Replay: mpv started OK (fullscreen) pid=%s", self._replay_video_process.pid)
+        self._commit_replay_file_played()
         self._replay_video_active = True
         self._set_phase(ReplayPhase.VIDEO_PLAYING)
         self._schedule_replay_video_poll()
@@ -513,6 +668,7 @@ class ReplayController:
                 self._showing_replay,
                 self._replay_video_active,
             )
+            self._replay_pending_mtime = None
             self.hide_video_host()
             return
 
@@ -536,12 +692,15 @@ class ReplayController:
         except OSError:
             _LOG.exception("Replay: mpv spawn failed (embedded); restoring scoreboard")
             self._replay_video_process = None
+            self._replay_pending_mtime = None
             self.hide_video_host()
+            self._show_replay_unavailable_toast()
             self.restore_normal_scoreboard_state("mpv_spawn_failed_embedded", log_level=logging.ERROR)
             return
 
         self.cancel_slate_stuck_watchdog()
         _LOG.info("Replay: mpv started OK (embedded) pid=%s wid=%s", self._replay_video_process.pid, host_id)
+        self._commit_replay_file_played()
         self._replay_video_active = True
         self._set_phase(ReplayPhase.VIDEO_PLAYING)
         self.handoff_replay_to_embedded_video()
@@ -655,11 +814,15 @@ class ReplayController:
             self.hide_video_host()
             self.show_canvas_after_video()
             self.restore_canvas_after_video()
-            self._current_overlay_photo = ImageTk.PhotoImage(self._replay_image)
-            self._canvas.itemconfig(
-                self._overlay_canvas_id,
-                image=self._current_overlay_photo,
-            )
+            # Fullscreen: slate was already opaque under mpv; show it again during hold.
+            # Embedded: handoff left the overlay transparent — skip forcing full slate here so
+            # _fade_overlay_out's animation is the only opacity change (avoids a double transition).
+            if not self._settings.mpv_embedded:
+                self._current_overlay_photo = ImageTk.PhotoImage(self._replay_image)
+                self._canvas.itemconfig(
+                    self._overlay_canvas_id,
+                    image=self._current_overlay_photo,
+                )
             self._canvas.tag_raise(self._overlay_canvas_id)
             self._root.update_idletasks()
             # Avoid root.update(): full event-loop processing here can re-enter handlers and
@@ -671,8 +834,14 @@ class ReplayController:
         self._replay_video_active = False
 
         if self._showing_replay and not self._is_transitioning:
+            self.cancel_return_slate()
+            hold_ms = (
+                0
+                if self._settings.mpv_embedded
+                else self._settings.replay_return_slate_hold_ms
+            )
             self._return_slate_job = self._scheduler.schedule(
-                self._settings.replay_return_slate_hold_ms,
+                hold_ms,
                 self._fade_overlay_out,
                 name="replay_return_to_slate_hold",
             )
@@ -746,19 +915,25 @@ class ReplayController:
             self.hide_video_host()
             self.show_canvas_after_video()
             self.restore_canvas_after_video()
-            self._current_overlay_photo = ImageTk.PhotoImage(self._replay_image)
-            self._canvas.itemconfig(
-                self._overlay_canvas_id,
-                image=self._current_overlay_photo,
-            )
+            if not self._settings.mpv_embedded:
+                self._current_overlay_photo = ImageTk.PhotoImage(self._replay_image)
+                self._canvas.itemconfig(
+                    self._overlay_canvas_id,
+                    image=self._current_overlay_photo,
+                )
             self._canvas.tag_raise(self._overlay_canvas_id)
             self._root.update_idletasks()
             # Avoid root.update(): see stop_replay_video_and_return (re-entrancy / timing).
             self._set_phase(ReplayPhase.SLATE_VISIBLE)
             _LOG.info("Replay: scoreboard restored after mpv exit; holding slate before fade-out")
             self.cancel_return_slate()
+            hold_ms = (
+                0
+                if self._settings.mpv_embedded
+                else self._settings.replay_return_slate_hold_ms
+            )
             self._return_slate_job = self._scheduler.schedule(
-                self._settings.replay_return_slate_hold_ms,
+                hold_ms,
                 self._fade_overlay_out,
                 name="replay_exit_slate_hold",
             )
