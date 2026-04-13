@@ -9,6 +9,8 @@ from typing import Any
 
 _LOG = logging.getLogger(__name__)
 
+_DEFAULT_BG_RESILIENCE_MAX = 5
+
 
 class AfterScheduler:
     """Tracks scheduled callbacks so shutdown and teardown can cancel reliably."""
@@ -25,6 +27,8 @@ class AfterScheduler:
         self._debug_schedule = debug_schedule
         self._jobs: set[str] = set()
         self._job_names: dict[str, str] = {}
+        self._resilience_failures: dict[str, int] = {}
+        self._resilience_disabled: set[str] = set()
 
     def schedule(
         self,
@@ -32,16 +36,41 @@ class AfterScheduler:
         callback: Callable[[], Any],
         *,
         name: str | None = None,
+        background_resilience: bool = False,
+        max_consecutive_failures: int = _DEFAULT_BG_RESILIENCE_MAX,
     ) -> str | None:
-        """Schedule callback; exceptions in callback are logged. Returns job id or None."""
+        """Schedule callback; exceptions in callback are logged. Returns job id or None.
+
+        When ``background_resilience`` is True and ``name`` is set, repeated uncaught
+        exceptions (excluding TclError) increment a per-name counter; after
+        ``max_consecutive_failures`` the job name is disabled and further schedules
+        with that name are skipped. Successful runs reset the counter. Hotkey paths
+        do not use this; only recurring background work should.
+        """
+        label = name or ""
+
+        if background_resilience:
+            if not label:
+                _LOG.debug("background_resilience ignored (no job name)")
+                background_resilience = False
+            elif label in self._resilience_disabled:
+                self._log.debug(
+                    "Scheduler: skip schedule (disabled after failures) name=%r",
+                    label,
+                )
+                return None
 
         def wrapper() -> None:
             self._jobs.discard(jid)
             self._job_names.pop(jid, None)
             if self._debug_schedule and label:
                 self._log.debug("after fired name=%r", label)
+            if background_resilience and label in self._resilience_disabled:
+                return
             try:
                 callback()
+                if background_resilience and label:
+                    self._resilience_failures.pop(label, None)
             except tk.TclError:
                 self._log.debug(
                     "after callback TclError name=%r (widget destroyed?)",
@@ -50,8 +79,17 @@ class AfterScheduler:
                 )
             except Exception:
                 self._log.exception("after callback failed name=%r", label)
+                if background_resilience and label:
+                    n = self._resilience_failures.get(label, 0) + 1
+                    self._resilience_failures[label] = n
+                    if n >= max_consecutive_failures:
+                        self._resilience_disabled.add(label)
+                        self._log.error(
+                            "Scheduler: disabled background job %r after %s consecutive failures",
+                            label,
+                            n,
+                        )
 
-        label = name or ""
         jid = self._root.after(delay_ms, wrapper)
         self._jobs.add(jid)
         if name:
@@ -90,8 +128,9 @@ class JobGroup:
         callback: Callable[[], Any],
         *,
         name: str | None = None,
+        **kwargs: Any,
     ) -> str | None:
-        jid = self._scheduler.schedule(delay_ms, callback, name=name)
+        jid = self._scheduler.schedule(delay_ms, callback, name=name, **kwargs)
         self._ids.append(jid)
         return jid
 

@@ -81,6 +81,7 @@ class Screensaver:
             _SCREENSAVER_FOCUS_RECLAIM_MS,
             self._focus_reclaim_tick,
             name="screensaver_focus_reclaim",
+            background_resilience=True,
         )
 
     def stop(self) -> None:

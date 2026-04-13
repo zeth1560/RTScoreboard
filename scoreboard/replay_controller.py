@@ -262,10 +262,13 @@ class ReplayController:
 
     def toggle_replay(self) -> None:
         if not self._settings.replay_enabled:
-            _LOG.info("Replay toggle ignored (REPLAY_ENABLED=0)")
+            _LOG.info("Replay: toggle ignored (REPLAY_ENABLED=0)")
             return
         if self._is_transitioning:
-            _LOG.debug("Replay toggle ignored during transition")
+            _LOG.info(
+                "Replay: toggle ignored (transition in progress phase=%s)",
+                self._phase.name,
+            )
             return
 
         _LOG.info(
@@ -286,6 +289,12 @@ class ReplayController:
             self._fade_overlay_in()
 
     def _fade_overlay_in(self) -> None:
+        if self._phase != ReplayPhase.IDLE:
+            _LOG.info("Replay: fade-in ignored (phase=%s)", self._phase.name)
+            return
+        if self._showing_replay:
+            _LOG.info("Replay: fade-in ignored (replay UI already active)")
+            return
         _LOG.info("Replay: fade-in to slate starting")
         self._before_slate_fade_in()
         self._set_phase(ReplayPhase.FADING_IN)
@@ -309,6 +318,15 @@ class ReplayController:
         self._schedule_slate_stuck_watchdog()
 
     def _fade_overlay_out(self) -> None:
+        if self._phase == ReplayPhase.FADING_OUT:
+            _LOG.info("Replay: fade-out ignored (already fading out)")
+            return
+        if self._phase in (ReplayPhase.FADING_IN, ReplayPhase.VIDEO_PLAYING):
+            _LOG.info("Replay: fade-out ignored (phase=%s)", self._phase.name)
+            return
+        if self._phase == ReplayPhase.IDLE:
+            _LOG.info("Replay: fade-out ignored (already idle)")
+            return
         _LOG.info("Replay: fade-out from slate starting")
         self.cancel_slate_stuck_watchdog()
         self._set_phase(ReplayPhase.FADING_OUT)
@@ -405,8 +423,8 @@ class ReplayController:
         self._start_job = None
 
         if not self._showing_replay or self._replay_video_active:
-            _LOG.debug(
-                "Replay: launch skipped showing=%s active=%s",
+            _LOG.info(
+                "Replay: launch skipped (invalid state showing=%s active=%s)",
                 self._showing_replay,
                 self._replay_video_active,
             )
@@ -450,6 +468,11 @@ class ReplayController:
         input_conf_path: str,
     ) -> None:
         if not self._showing_replay or self._replay_video_active:
+            _LOG.info(
+                "Replay: mpv fullscreen spawn skipped (invalid state showing=%s active=%s)",
+                self._showing_replay,
+                self._replay_video_active,
+            )
             return
 
         try:
@@ -485,6 +508,11 @@ class ReplayController:
     ) -> None:
         self._embed_spawn_job = None
         if not self._showing_replay or self._replay_video_active:
+            _LOG.info(
+                "Replay: mpv embedded spawn skipped (invalid state showing=%s active=%s)",
+                self._showing_replay,
+                self._replay_video_active,
+            )
             self.hide_video_host()
             return
 
@@ -619,6 +647,7 @@ class ReplayController:
 
     def stop_replay_video_and_return(self) -> None:
         _LOG.info("Replay: operator stopped video (return to slate)")
+        self.cancel_return_slate()
         self.cancel_replay_video_launch()
         self.cancel_replay_video_poll()
 
@@ -687,6 +716,7 @@ class ReplayController:
             self._settings.replay_video_poll_ms,
             self._poll_replay_video_process,
             name="replay_mpv_poll",
+            background_resilience=True,
         )
 
     def _poll_replay_video_process(self) -> None:
@@ -726,6 +756,7 @@ class ReplayController:
             # Avoid root.update(): see stop_replay_video_and_return (re-entrancy / timing).
             self._set_phase(ReplayPhase.SLATE_VISIBLE)
             _LOG.info("Replay: scoreboard restored after mpv exit; holding slate before fade-out")
+            self.cancel_return_slate()
             self._return_slate_job = self._scheduler.schedule(
                 self._settings.replay_return_slate_hold_ms,
                 self._fade_overlay_out,

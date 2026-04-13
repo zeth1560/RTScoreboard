@@ -6,6 +6,7 @@ import logging
 import os
 import time
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 
 from PIL import Image, ImageTk
@@ -162,6 +163,17 @@ class ScoreboardApp:
         self.schedule_synthetic_focus_clicks()
         self._schedule_heartbeat()
         self._apply_hidden_cursor()
+        self._log_startup_readiness()
+
+    def _log_startup_readiness(self) -> None:
+        log_path = (self.settings.scoreboard_log_file or "").strip()
+        _LOG.info(
+            "Startup readiness: streamdeck_hotkeys=deferred replay_enabled=%s "
+            "recording_overlay=ok scheduler=ok synthetic_focus_click=%s log_file=%s",
+            self.settings.replay_enabled,
+            self.settings.synthetic_focus_click,
+            repr(log_path) if log_path else "(stderr only)",
+        )
 
     def _apply_hidden_cursor(self) -> None:
         """Hide the mouse pointer over the scoreboard (kiosk-style)."""
@@ -235,7 +247,7 @@ class ScoreboardApp:
             "Ctrl+Shift+b",
             lambda e: self.on_streamdeck_input(self.toggle_black_screen),
         )
-        root.bind_all("<Escape>", lambda e: self.close_app())
+        root.bind_all("<Escape>", lambda e: self.root.after(0, self.close_app))
 
     @property
     def score_a(self) -> int:
@@ -259,7 +271,11 @@ class ScoreboardApp:
         self.recording_overlay.lift()
         self.rearm_focus_watchdog_after_transition("replay_fade_out")
 
-    def on_streamdeck_input(self, action) -> None:
+    def on_streamdeck_input(self, action: Callable[[], None]) -> None:
+        """Bind handlers call this only; work runs on the next event-loop tick."""
+        self.root.after(0, lambda a=action: self._run_streamdeck_action(a))
+
+    def _run_streamdeck_action(self, action: Callable[[], None]) -> None:
         self.last_input_ms = int(time.monotonic() * 1000)
 
         if self.screensaver.is_active():
@@ -275,6 +291,9 @@ class ScoreboardApp:
 
     def _on_recording_dismiss_chord(self, _event: tk.Event | None = None) -> None:
         """Dismiss chord: do not let screensaver-only short-circuit skip dismiss."""
+        self.root.after(0, self._recording_dismiss_deferred)
+
+    def _recording_dismiss_deferred(self) -> None:
         self.last_input_ms = int(time.monotonic() * 1000)
         if self.screensaver.is_active():
             self.screensaver.stop()
@@ -301,6 +320,12 @@ class ScoreboardApp:
 
     def toggle_black_screen(self) -> None:
         if self.replay.blocks_black_screen_toggle():
+            _LOG.info(
+                "Black screen toggle ignored (replay busy transitioning=%s video=%s showing=%s)",
+                self.replay.is_transitioning,
+                self.replay.replay_video_active,
+                self.replay.showing_replay,
+            )
             return
         self.black_screen_active = not self.black_screen_active
         if self.black_screen_active:
@@ -432,6 +457,7 @@ class ScoreboardApp:
             self.settings.focus_watchdog_interval_ms,
             self.focus_watchdog_tick,
             name="focus_watchdog",
+            background_resilience=True,
         )
         self._focus_watchdog_exhausted_logged = False
 
@@ -461,6 +487,7 @@ class ScoreboardApp:
             self.settings.focus_watchdog_interval_ms,
             self.focus_watchdog_tick,
             name="focus_watchdog",
+            background_resilience=True,
         )
 
     def schedule_synthetic_focus_clicks(self) -> None:
@@ -473,7 +500,8 @@ class ScoreboardApp:
             jid = self.scheduler.schedule(
                 delay_ms,
                 self.try_synthetic_focus_click,
-                name=f"synthetic_click_{delay_ms}ms",
+                name="synthetic_focus_click",
+                background_resilience=True,
             )
             self._synthetic_click_jobs.append(jid)
 
@@ -532,6 +560,7 @@ class ScoreboardApp:
             5000,
             self.check_idle_timeout,
             name="idle_timeout_check",
+            background_resilience=True,
         )
 
     def check_idle_timeout(self) -> None:
@@ -563,6 +592,7 @@ class ScoreboardApp:
             ms,
             self._heartbeat_tick,
             name="pilot_heartbeat",
+            background_resilience=True,
         )
 
     def _heartbeat_tick(self) -> None:
