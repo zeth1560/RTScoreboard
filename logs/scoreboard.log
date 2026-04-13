@@ -1,0 +1,81 @@
+2026-04-13 01:28:57 INFO [t] ok
+2026-04-13 01:29:33 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=3072x1728
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mp4'
+  slideshow_enabled=True dir_ok=True image_count=28
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+2026-04-13 01:29:33 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mp4'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-13 01:29:33 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 2-3
+2026-04-13 01:29:36 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=2826414); follow-up reclaim
+2026-04-13 01:29:36 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 01:29:40 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=2826414); follow-up reclaim
+2026-04-13 01:29:40 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 01:29:41 INFO [scoreboard.recording_overlay] Recording overlay widgets created
+2026-04-13 01:29:41 INFO [scoreboard.recording_overlay] Recording overlay: countdown started (max 20 min)
+2026-04-13 01:29:46 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=2826414); follow-up reclaim
+2026-04-13 01:29:46 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=False focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 01:29:48 INFO [scoreboard.recording_overlay] Recording overlay: session end info shown
+2026-04-13 01:29:53 INFO [scoreboard.recording_overlay] Recording overlay: hidden
+2026-04-13 01:29:54 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-13 01:29:54 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-13 01:29:54 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-13 01:29:55 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-13 01:29:55 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-13 01:29:55 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 3000 ms
+2026-04-13 01:29:58 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mp4
+2026-04-13 01:29:58 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=14076
+2026-04-13 01:29:58 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-13 01:30:08 INFO [scoreboard.replay_controller] Replay: toggle requested showing=True video_active=True phase=VIDEO_PLAYING
+2026-04-13 01:30:08 INFO [scoreboard.replay_controller] Replay: operator stopped video (return to slate)
+2026-04-13 01:30:08 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-13 01:30:08 INFO [scoreboard.replay_controller] Replay: scoreboard restored after intentional video stop (slate visible)
+2026-04-13 01:30:09 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-13 01:30:09 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-13 01:30:10 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-13 01:30:10 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-13 01:30:10 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-13 01:30:17 INFO [scoreboard.app] Focus: re-arming watchdog after black_screen_off (~750 s of periodic reclaim, interval 3000ms)
+2026-04-13 01:30:26 INFO [scoreboard.app] Application shutdown requested
+2026-04-13 01:30:26 INFO [scoreboard.replay_controller] Replay: teardown

@@ -16,6 +16,7 @@ _LOG = logging.getLogger(__name__)
 # Defaults (formerly module-level constants in main.py)
 DEFAULT_STATE_FILE = "state.json"
 DEFAULT_ENV_FILE = ".env"
+DEFAULT_SCOREBOARD_LOG_FILE = "logs/scoreboard.log"
 DEFAULT_SCOREBOARD_BG = "Score BG.png"
 DEFAULT_REPLAY_SLATE = "ir slate.png"
 DEFAULT_SLIDESHOW_DIR = r"C:\Users\admin\Dropbox\slideshow"
@@ -35,7 +36,8 @@ REPLAY_TRANSITION_TIMEOUT_MS = 90_000
 # After slate is shown, if video never becomes active this long after launch delay, recover (ms)
 REPLAY_SLATE_STUCK_TIMEOUT_MS = 90_000
 FOCUS_WATCHDOG_INTERVAL_MS = 3000
-FOCUS_WATCHDOG_TICKS = 45
+# ~12.5 minutes at default interval (250 * 3s); pilot can override via FOCUS_WATCHDOG_TICKS.
+FOCUS_WATCHDOG_TICKS = 250
 
 RECORDING_DEFAULT_DURATION_MINUTES = 20
 RECORDING_COUNTDOWN_TICK_MS = 1000
@@ -46,6 +48,16 @@ RECORDING_ENDED_MESSAGE = (
     "Your recording has reached its maximum length and ended"
 )
 RECORDING_ENDED_HOLD_MINUTES_DEFAULT = 2
+RECORDING_SESSION_END_INFO_MS_DEFAULT = 5000
+RECORDING_SESSION_END_MESSAGE = (
+    "Recording ended. You will receive an email after your session ends "
+    "with the link to download your video."
+)
+# Optional PNGs: in-progress (on/off for red-dot blink), ended slate with timer overlaid.
+RECORDING_ENDED_GRAPHIC_HOLD_MS_DEFAULT = 10_000
+RECORDING_OVERLAY_TIMER_X_FRAC_DEFAULT = 0.28
+RECORDING_OVERLAY_TIMER_Y_FRAC_DEFAULT = 0.36
+RECORDING_OVERLAY_TIMER_FONT_SIZE_DEFAULT = 22
 
 
 def _env_truthy(value: str | None, default: bool) -> bool:
@@ -69,6 +81,16 @@ def _parse_positive_int(raw: str | None, default: int, name: str, minimum: int =
             )
             return default
         return n
+    except (TypeError, ValueError):
+        _LOG.warning("%s=%r invalid; using default %s", name, raw, default)
+        return default
+
+
+def _parse_int_env(raw: str | None, default: int, name: str) -> int:
+    if raw is None or str(raw).strip() == "":
+        return default
+    try:
+        return int(float(str(raw).strip()))
     except (TypeError, ValueError):
         _LOG.warning("%s=%r invalid; using default %s", name, raw, default)
         return default
@@ -122,11 +144,23 @@ class Settings:
     recording_overlay_width: int = RECORDING_OVERLAY_WIDTH
     recording_overlay_height: int = RECORDING_OVERLAY_HEIGHT
     recording_ended_message: str = RECORDING_ENDED_MESSAGE
+    recording_session_end_info_ms: int = RECORDING_SESSION_END_INFO_MS_DEFAULT
+    recording_session_end_message: str = RECORDING_SESSION_END_MESSAGE
+    recording_progress_image_on: str = ""
+    recording_progress_image_off: str = ""
+    recording_ended_image: str = ""
+    recording_ended_graphic_hold_ms: int = RECORDING_ENDED_GRAPHIC_HOLD_MS_DEFAULT
+    recording_overlay_timer_x_frac: float = RECORDING_OVERLAY_TIMER_X_FRAC_DEFAULT
+    recording_overlay_timer_y_frac: float = RECORDING_OVERLAY_TIMER_Y_FRAC_DEFAULT
+    recording_overlay_timer_font_size: int = RECORDING_OVERLAY_TIMER_FONT_SIZE_DEFAULT
+    recording_overlay_timer_offset_x_px: int = 0
+    recording_overlay_timer_offset_y_px: int = 0
 
     # Pilot / reliability
     replay_enabled: bool = True
     slideshow_enabled: bool = True
     scoreboard_debug: bool = False
+    scoreboard_log_file: str = DEFAULT_SCOREBOARD_LOG_FILE
     heartbeat_interval_minutes: int = 0
     replay_transition_timeout_ms: int = REPLAY_TRANSITION_TIMEOUT_MS
     replay_slate_stuck_timeout_ms: int = REPLAY_SLATE_STUCK_TIMEOUT_MS
@@ -181,6 +215,98 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
     )
     recording_ended_hold_ms = ended_hold_min * 60 * 1000
 
+    recording_session_end_info_ms = _parse_positive_int(
+        g(
+            "RECORDING_SESSION_END_INFO_MS",
+            str(RECORDING_SESSION_END_INFO_MS_DEFAULT),
+        ),
+        RECORDING_SESSION_END_INFO_MS_DEFAULT,
+        "RECORDING_SESSION_END_INFO_MS",
+        minimum=1000,
+    )
+    recording_session_end_msg_raw = g("RECORDING_SESSION_END_MESSAGE")
+    recording_session_end_message = (
+        str(recording_session_end_msg_raw).strip()
+        if recording_session_end_msg_raw
+        else ""
+    )
+    if not recording_session_end_message:
+        recording_session_end_message = RECORDING_SESSION_END_MESSAGE
+
+    recording_progress_image_on = _normalize_path(g("RECORDING_PROGRESS_IMAGE_ON")) or ""
+    recording_progress_image_off = _normalize_path(g("RECORDING_PROGRESS_IMAGE_OFF")) or ""
+    recording_ended_image = _normalize_path(g("RECORDING_ENDED_IMAGE")) or ""
+
+    recording_ended_graphic_hold_ms = _parse_positive_int(
+        g(
+            "RECORDING_ENDED_GRAPHIC_HOLD_MS",
+            str(RECORDING_ENDED_GRAPHIC_HOLD_MS_DEFAULT),
+        ),
+        RECORDING_ENDED_GRAPHIC_HOLD_MS_DEFAULT,
+        "RECORDING_ENDED_GRAPHIC_HOLD_MS",
+        minimum=1000,
+    )
+
+    def _unit_float(raw: str | None, default: float, name: str) -> float:
+        if raw is None or str(raw).strip() == "":
+            return default
+        try:
+            v = float(str(raw).strip())
+            return min(1.0, max(0.0, v))
+        except (TypeError, ValueError):
+            _LOG.warning("%s=%r invalid; using default %s", name, raw, default)
+            return default
+
+    recording_overlay_timer_x_frac = _unit_float(
+        g("RECORDING_OVERLAY_TIMER_X_FRAC"),
+        RECORDING_OVERLAY_TIMER_X_FRAC_DEFAULT,
+        "RECORDING_OVERLAY_TIMER_X_FRAC",
+    )
+    recording_overlay_timer_y_frac = _unit_float(
+        g("RECORDING_OVERLAY_TIMER_Y_FRAC"),
+        RECORDING_OVERLAY_TIMER_Y_FRAC_DEFAULT,
+        "RECORDING_OVERLAY_TIMER_Y_FRAC",
+    )
+    recording_overlay_timer_font_size = _parse_int_env(
+        g(
+            "RECORDING_OVERLAY_TIMER_FONT_SIZE",
+            str(RECORDING_OVERLAY_TIMER_FONT_SIZE_DEFAULT),
+        ),
+        RECORDING_OVERLAY_TIMER_FONT_SIZE_DEFAULT,
+        "RECORDING_OVERLAY_TIMER_FONT_SIZE",
+    )
+    if recording_overlay_timer_font_size == 0:
+        _LOG.warning("RECORDING_OVERLAY_TIMER_FONT_SIZE=0 invalid; using %s", RECORDING_OVERLAY_TIMER_FONT_SIZE_DEFAULT)
+        recording_overlay_timer_font_size = RECORDING_OVERLAY_TIMER_FONT_SIZE_DEFAULT
+    elif recording_overlay_timer_font_size > 0:
+        if recording_overlay_timer_font_size < 8:
+            recording_overlay_timer_font_size = 8
+    else:
+        if recording_overlay_timer_font_size > -8:
+            recording_overlay_timer_font_size = -8
+    recording_overlay_width = _parse_positive_int(
+        g("RECORDING_OVERLAY_WIDTH", str(RECORDING_OVERLAY_WIDTH)),
+        RECORDING_OVERLAY_WIDTH,
+        "RECORDING_OVERLAY_WIDTH",
+        minimum=120,
+    )
+    recording_overlay_height = _parse_positive_int(
+        g("RECORDING_OVERLAY_HEIGHT", str(RECORDING_OVERLAY_HEIGHT)),
+        RECORDING_OVERLAY_HEIGHT,
+        "RECORDING_OVERLAY_HEIGHT",
+        minimum=60,
+    )
+    recording_overlay_timer_offset_x_px = _parse_int_env(
+        g("RECORDING_OVERLAY_TIMER_OFFSET_X_PX"),
+        0,
+        "RECORDING_OVERLAY_TIMER_OFFSET_X_PX",
+    )
+    recording_overlay_timer_offset_y_px = _parse_int_env(
+        g("RECORDING_OVERLAY_TIMER_OFFSET_Y_PX"),
+        0,
+        "RECORDING_OVERLAY_TIMER_OFFSET_Y_PX",
+    )
+
     state_file = _normalize_path(g("STATE_FILE", DEFAULT_STATE_FILE)) or DEFAULT_STATE_FILE
     scoreboard_bg = (
         _normalize_path(g("SCOREBOARD_BACKGROUND_IMAGE", DEFAULT_SCOREBOARD_BG))
@@ -222,6 +348,31 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         minimum=5000,
     )
 
+    focus_watchdog_interval_ms = _parse_positive_int(
+        g("FOCUS_WATCHDOG_INTERVAL_MS", str(FOCUS_WATCHDOG_INTERVAL_MS)),
+        FOCUS_WATCHDOG_INTERVAL_MS,
+        "FOCUS_WATCHDOG_INTERVAL_MS",
+        minimum=500,
+    )
+    focus_watchdog_ticks = _parse_positive_int(
+        g("FOCUS_WATCHDOG_TICKS", str(FOCUS_WATCHDOG_TICKS)),
+        FOCUS_WATCHDOG_TICKS,
+        "FOCUS_WATCHDOG_TICKS",
+        minimum=1,
+    )
+
+    _raw_log = os.environ.get("SCOREBOARD_LOG_FILE")
+    if _raw_log is None:
+        scoreboard_log_file = DEFAULT_SCOREBOARD_LOG_FILE
+    else:
+        ls = str(_raw_log).strip().lower()
+        if ls in ("", "0", "none", "off", "-", "false", "no"):
+            scoreboard_log_file = ""
+        else:
+            scoreboard_log_file = (
+                _normalize_path(str(_raw_log).strip()) or DEFAULT_SCOREBOARD_LOG_FILE
+            )
+
     settings = Settings(
         state_file=state_file,
         scoreboard_background_image=scoreboard_bg,
@@ -238,12 +389,28 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         recording_start_hotkey=recording_start,
         recording_dismiss_hotkey=recording_dismiss,
         black_screen_hotkey=black_screen,
+        recording_session_end_info_ms=recording_session_end_info_ms,
+        recording_session_end_message=recording_session_end_message,
+        recording_overlay_width=recording_overlay_width,
+        recording_overlay_height=recording_overlay_height,
+        recording_progress_image_on=recording_progress_image_on,
+        recording_progress_image_off=recording_progress_image_off,
+        recording_ended_image=recording_ended_image,
+        recording_ended_graphic_hold_ms=recording_ended_graphic_hold_ms,
+        recording_overlay_timer_x_frac=recording_overlay_timer_x_frac,
+        recording_overlay_timer_y_frac=recording_overlay_timer_y_frac,
+        recording_overlay_timer_font_size=recording_overlay_timer_font_size,
+        recording_overlay_timer_offset_x_px=recording_overlay_timer_offset_x_px,
+        recording_overlay_timer_offset_y_px=recording_overlay_timer_offset_y_px,
         replay_enabled=replay_enabled,
         slideshow_enabled=slideshow_enabled,
         scoreboard_debug=scoreboard_debug,
+        scoreboard_log_file=scoreboard_log_file,
         heartbeat_interval_minutes=heartbeat_interval_minutes,
         replay_transition_timeout_ms=transition_timeout,
         replay_slate_stuck_timeout_ms=slate_stuck_timeout,
+        focus_watchdog_interval_ms=focus_watchdog_interval_ms,
+        focus_watchdog_ticks=focus_watchdog_ticks,
     )
 
     _validate_hotkey_specs(settings)
@@ -291,6 +458,14 @@ def summarize_settings(settings: Settings) -> str:
         f"synthetic_focus_click={settings.synthetic_focus_click}",
         f"recording_max_minutes={settings.recording_max_minutes}",
         f"recording_ended_hold_ms={settings.recording_ended_hold_ms}",
+        f"recording_session_end_info_ms={settings.recording_session_end_info_ms}",
+        f"recording_overlay_width={settings.recording_overlay_width}",
+        f"recording_overlay_height={settings.recording_overlay_height}",
+        f"recording_progress_image_on={settings.recording_progress_image_on!r}",
+        f"recording_ended_image={settings.recording_ended_image!r}",
+        f"recording_ended_graphic_hold_ms={settings.recording_ended_graphic_hold_ms}",
+        f"recording_overlay_timer_offset_x_px={settings.recording_overlay_timer_offset_x_px}",
+        f"recording_overlay_timer_offset_y_px={settings.recording_overlay_timer_offset_y_px}",
         f"recording_start_hotkey={settings.recording_start_hotkey!r}",
         f"recording_dismiss_hotkey={settings.recording_dismiss_hotkey!r}",
         f"black_screen_hotkey={settings.black_screen_hotkey!r}",
@@ -299,9 +474,12 @@ def summarize_settings(settings: Settings) -> str:
         f"replay_enabled={settings.replay_enabled}",
         f"slideshow_enabled={settings.slideshow_enabled}",
         f"scoreboard_debug={settings.scoreboard_debug}",
+        f"scoreboard_log_file={settings.scoreboard_log_file!r}",
         f"heartbeat_interval_minutes={settings.heartbeat_interval_minutes}",
         f"replay_transition_timeout_ms={settings.replay_transition_timeout_ms}",
         f"replay_slate_stuck_timeout_ms={settings.replay_slate_stuck_timeout_ms}",
+        f"focus_watchdog_ticks={settings.focus_watchdog_ticks}",
+        f"focus_watchdog_interval_ms={settings.focus_watchdog_interval_ms}",
     ]
     return "\n".join(lines)
 

@@ -15,6 +15,10 @@ from scoreboard.scheduler import AfterScheduler, JobGroup
 
 _LOG = logging.getLogger(__name__)
 
+# While slideshow is up, periodically bring the Tk window forward so Stream Deck / hotkeys
+# still reach this app after the focus watchdog has stopped (~few minutes post-start).
+_SCREENSAVER_FOCUS_RECLAIM_MS = 2500
+
 
 class Screensaver:
     def __init__(
@@ -27,6 +31,8 @@ class Screensaver:
         screen_width: int,
         screen_height: int,
         lift_recording_overlay: Callable[[], None],
+        reclaim_keyboard_focus: Callable[[], None] | None = None,
+        on_stopped: Callable[[], None] | None = None,
     ) -> None:
         self._root = root
         self._canvas = canvas
@@ -36,13 +42,17 @@ class Screensaver:
         self._screen_width = screen_width
         self._screen_height = screen_height
         self._lift_recording_overlay = lift_recording_overlay
+        self._reclaim_keyboard_focus = reclaim_keyboard_focus
+        self._on_stopped = on_stopped
 
         self._active = False
         self._jobs = JobGroup(scheduler)
+        self._focus_reclaim_job: str | None = None
         self._transparent_overlay_photo: ImageTk.PhotoImage | None = None
         self._current_photo: ImageTk.PhotoImage | None = None
         self._current_frame: Image.Image | None = None
         self._fade_frames_hold: list[ImageTk.PhotoImage] = []
+        self._last_slideshow_path: str | None = None
 
     def set_transparent_overlay_photo(self, photo: ImageTk.PhotoImage) -> None:
         self._transparent_overlay_photo = photo
@@ -55,7 +65,23 @@ class Screensaver:
         self._screen_height = height
 
     def _clear_jobs(self) -> None:
+        self._scheduler.cancel(self._focus_reclaim_job)
+        self._focus_reclaim_job = None
         self._jobs.cancel_all()
+
+    def _focus_reclaim_tick(self) -> None:
+        self._focus_reclaim_job = None
+        if not self._active or self._reclaim_keyboard_focus is None:
+            return
+        try:
+            self._reclaim_keyboard_focus()
+        except (RuntimeError, tk.TclError, ValueError, TypeError):
+            _LOG.debug("Screensaver: focus reclaim failed", exc_info=True)
+        self._focus_reclaim_job = self._scheduler.schedule(
+            _SCREENSAVER_FOCUS_RECLAIM_MS,
+            self._focus_reclaim_tick,
+            name="screensaver_focus_reclaim",
+        )
 
     def stop(self) -> None:
         if not self._active:
@@ -63,6 +89,7 @@ class Screensaver:
         _LOG.info("Screensaver: stopping")
         self._active = False
         self._clear_jobs()
+        self._last_slideshow_path = None
         if self._transparent_overlay_photo is not None:
             self._current_photo = self._transparent_overlay_photo
             self._current_frame = None
@@ -72,6 +99,11 @@ class Screensaver:
             )
             self._canvas.tag_raise(self._overlay_canvas_id)
             self._lift_recording_overlay()
+        if self._on_stopped is not None:
+            try:
+                self._on_stopped()
+            except Exception:
+                _LOG.exception("Screensaver: on_stopped callback failed")
 
     def start(self) -> None:
         if not self._settings.slideshow_enabled:
@@ -82,6 +114,8 @@ class Screensaver:
         _LOG.info("Screensaver: starting")
         self._active = True
         self._current_frame = None
+        if self._reclaim_keyboard_focus is not None:
+            self._focus_reclaim_tick()
         self._show_next_image()
 
     def get_slideshow_images(self) -> list[str]:
@@ -144,7 +178,12 @@ class Screensaver:
             )
             return
 
-        selected = random.choice(paths)
+        if len(paths) > 1 and self._last_slideshow_path is not None:
+            candidates = [p for p in paths if p != self._last_slideshow_path]
+            pool = candidates if candidates else paths
+        else:
+            pool = paths
+        selected = random.choice(pool)
         try:
             next_frame = self.load_and_cover_image(selected)
             if next_frame is None:
@@ -154,6 +193,7 @@ class Screensaver:
                 self._fade_in(next_frame)
             else:
                 self._fade_between(self._current_frame, next_frame)
+            self._last_slideshow_path = selected
         except Exception:
             _LOG.exception("Screensaver: error loading %s", selected)
             self._jobs.schedule(
@@ -229,3 +269,4 @@ class Screensaver:
         self._clear_jobs()
         self._active = False
         self._fade_frames_hold.clear()
+        self._last_slideshow_path = None
