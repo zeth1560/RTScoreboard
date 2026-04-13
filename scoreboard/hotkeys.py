@@ -88,15 +88,15 @@ def bind_recording_hotkey(
         if isinstance(parsed, tuple) and parsed[0] == "legacy":
             char = parsed[1]
             if len(char) == 1 and char.isalpha():
-                widget.bind(char, handler)
+                widget.bind_all(char, handler)
                 other = char.swapcase()
                 if other != char:
-                    widget.bind(other, handler)
+                    widget.bind_all(other, handler)
             else:
-                widget.bind(char, handler)
-            _LOG.debug("Bound hotkey (legacy) %r", candidate)
+                widget.bind_all(char, handler)
+            _LOG.debug("Bound hotkey (legacy, bind_all) %r", candidate)
             return
-        widget.bind(parsed, handler)
-        _LOG.debug("Bound hotkey %r -> %s", candidate, parsed)
+        widget.bind_all(parsed, handler)
+        _LOG.debug("Bound hotkey (bind_all) %r -> %s", candidate, parsed)
         return
     _LOG.error("Failed to bind hotkey; spec=%r default=%r", spec, default_spec)

@@ -18,7 +18,11 @@ from scoreboard.recording_overlay import RecordingOverlay
 from scoreboard.replay_controller import ReplayController
 from scoreboard.scheduler import AfterScheduler
 from scoreboard.screensaver import Screensaver
+
 _LOG = logging.getLogger(__name__)
+
+# Watchdog focus_ok=False: at most one INFO line per this many seconds (pilot log noise).
+_FOCUS_WATCHDOG_FAIL_INFO_COOLDOWN_SEC = 30.0
 
 
 class ScoreboardApp:
@@ -49,6 +53,7 @@ class ScoreboardApp:
         self._focus_watchdog_exhausted_logged = False
         self.last_input_ms = int(time.monotonic() * 1000)
         self._synthetic_click_attempts = 0
+        self._last_watchdog_focus_fail_info_mono = 0.0
 
         self.black_screen_active = False
         self.black_screen_cover_visible = False
@@ -120,6 +125,12 @@ class ScoreboardApp:
             self.screen_width,
             self.screen_height,
             lift_recording_overlay=self.recording_overlay.lift,
+            reclaim_keyboard_focus=lambda: self.claim_keyboard_focus(
+                reason="screensaver_periodic",
+            ),
+            on_stopped=lambda: self.rearm_focus_watchdog_after_transition(
+                "screensaver_stopped",
+            ),
         )
         self.screensaver.set_transparent_overlay_photo(self.overlay_photo)
 
@@ -149,27 +160,49 @@ class ScoreboardApp:
         self.start_focus_watchdog()
         self.schedule_synthetic_focus_clicks()
         self._schedule_heartbeat()
+        self._apply_hidden_cursor()
+
+    def _apply_hidden_cursor(self) -> None:
+        """Hide the mouse pointer over the scoreboard (kiosk-style)."""
+        cursor = "none"
+        try:
+            self.root.option_add("*cursor", cursor)
+            self.root.configure(cursor=cursor)
+        except tk.TclError:
+            _LOG.warning(
+                "Could not set cursor=%r (invisible pointer may be unsupported); "
+                "using system default",
+                cursor,
+                exc_info=True,
+            )
+            return
+        for w in (self.canvas, self.video_host, self.black_screen_frame):
+            try:
+                w.configure(cursor=cursor)
+            except tk.TclError:
+                _LOG.debug("cursor=%r skipped for widget", cursor, exc_info=True)
+        self.recording_overlay.apply_hidden_cursor()
 
     def _bind_keys(self) -> None:
         root = self.root
-        root.bind(
+        root.bind_all(
             "q",
             lambda e: self.on_streamdeck_input(lambda: self.update_score("a", 1)),
         )
-        root.bind(
+        root.bind_all(
             "a",
             lambda e: self.on_streamdeck_input(lambda: self.update_score("a", -1)),
         )
-        root.bind(
+        root.bind_all(
             "p",
             lambda e: self.on_streamdeck_input(lambda: self.update_score("b", 1)),
         )
-        root.bind(
+        root.bind_all(
             "l",
             lambda e: self.on_streamdeck_input(lambda: self.update_score("b", -1)),
         )
-        root.bind("r", lambda e: self.on_streamdeck_input(self.reset_scores))
-        root.bind("i", lambda e: self.on_streamdeck_input(self.toggle_replay))
+        root.bind_all("r", lambda e: self.on_streamdeck_input(self.reset_scores))
+        root.bind_all("i", lambda e: self.on_streamdeck_input(self.toggle_replay))
         bind_recording_hotkey(
             root,
             self.settings.recording_start_hotkey,
@@ -188,7 +221,7 @@ class ScoreboardApp:
             "Ctrl+Shift+b",
             lambda e: self.on_streamdeck_input(self.toggle_black_screen),
         )
-        root.bind("<Escape>", lambda e: self.close_app())
+        root.bind_all("<Escape>", lambda e: self.close_app())
 
     @property
     def score_a(self) -> int:
@@ -210,6 +243,7 @@ class ScoreboardApp:
         if self.black_screen_active:
             self._show_black_screen_cover()
         self.recording_overlay.lift()
+        self.rearm_focus_watchdog_after_transition("replay_fade_out")
 
     def on_streamdeck_input(self, action) -> None:
         self.last_input_ms = int(time.monotonic() * 1000)
@@ -226,9 +260,9 @@ class ScoreboardApp:
         self.recording_overlay.start_or_restart_countdown()
 
     def on_recording_dismiss_hotkey(self) -> None:
-        if not self.recording_overlay.can_dismiss_ended_from_hotkey():
+        if not self.recording_overlay.can_dismiss_from_operator_hotkey():
             return
-        self.recording_overlay.dismiss_ended_message()
+        self.recording_overlay.dismiss_from_operator_hotkey()
 
     def _show_black_screen_cover(self) -> None:
         if self.black_screen_cover_visible:
@@ -252,6 +286,7 @@ class ScoreboardApp:
             self._show_black_screen_cover()
         else:
             self._hide_black_screen_cover()
+            self.rearm_focus_watchdog_after_transition("black_screen_off")
         self.recording_overlay.lift()
 
     def schedule_claim_focus(self) -> None:
@@ -261,35 +296,68 @@ class ScoreboardApp:
         for delay_ms in (0, 50, 150, 400, 800, 1500, 3000, 6000, 12000, 20000):
             jid = self.scheduler.schedule(
                 delay_ms,
-                self.claim_keyboard_focus,
+                lambda ms=delay_ms: self.claim_keyboard_focus(
+                    reason=f"startup_claim_{ms}ms",
+                ),
                 name=f"focus_claim_{delay_ms}ms",
             )
             self._focus_claim_jobs.append(jid)
 
-    def claim_keyboard_focus(self) -> None:
+    def rearm_focus_watchdog_after_transition(self, event: str) -> None:
+        """Extend pilot protection: full watchdog duration + startup-style claim burst."""
+        approx_s = (
+            self.settings.focus_watchdog_ticks
+            * self.settings.focus_watchdog_interval_ms
+            // 1000
+        )
+        _LOG.info(
+            "Focus: re-arming watchdog after %s (~%s s of periodic reclaim, interval %sms)",
+            event,
+            approx_s,
+            self.settings.focus_watchdog_interval_ms,
+        )
+        self.start_focus_watchdog()
+        self.schedule_claim_focus()
+
+    def _focus_keyboard_seems_on_app(self) -> bool:
+        w = self.root.focus_get()
+        if w is None:
+            return False
+        try:
+            top = w.winfo_toplevel()
+        except tk.TclError:
+            return False
+        if top == self.root:
+            return True
+        rec = self.recording_overlay.recording_toplevel()
+        return rec is not None and top == rec
+
+    def claim_keyboard_focus(self, *, reason: str = "unspecified") -> None:
         if self.replay.replay_video_active:
+            _LOG.debug("Focus reclaim skipped (reason=%s): replay video active", reason)
             return
 
-        if self.settings.scoreboard_debug:
-            _LOG.debug("Focus reclaim attempt (replay video not active)")
+        used_win32 = os.name == "nt" and not self.recording_overlay.is_ui_active()
 
         try:
             self.root.update_idletasks()
             self.root.lift()
-            self.root.attributes("-topmost", True)
-            self.scheduler.cancel(self._release_topmost_job)
-            self._release_topmost_job = self.scheduler.schedule(
-                150,
-                self._release_topmost_brief,
-                name="focus_release_topmost",
-            )
+            # Root topmost on/off makes a transient recording Toplevel flicker on Windows.
+            # While the recording box is up, keep the root out of that dance; overlay stays topmost.
+            if not self.recording_overlay.is_ui_active():
+                self.root.attributes("-topmost", True)
+                self.scheduler.cancel(self._release_topmost_job)
+                self._release_topmost_job = self.scheduler.schedule(
+                    150,
+                    self._release_topmost_brief,
+                    name="focus_release_topmost",
+                )
         except tk.TclError:
             _LOG.debug("claim_keyboard_focus: lift/topmost failed", exc_info=True)
 
-        if os.name == "nt":
+        if used_win32:
             try:
                 hwnd = int(self.root.winfo_id())
-                _LOG.debug("Focus reclaim: win32_force_foreground hwnd=%s", hwnd)
                 win32_force_foreground(hwnd)
             except (tk.TclError, ValueError, TypeError):
                 _LOG.debug("Focus reclaim: win32_force_foreground skipped", exc_info=True)
@@ -301,6 +369,33 @@ class ScoreboardApp:
             self.canvas.focus_force()
         except tk.TclError:
             _LOG.debug("claim_keyboard_focus: focus_set failed", exc_info=True)
+
+        focus_ok = self._focus_keyboard_seems_on_app()
+        if reason.startswith("after_synthetic_click"):
+            lvl = logging.INFO
+        elif reason == "watchdog":
+            if not focus_ok:
+                now_mono = time.monotonic()
+                if (
+                    now_mono - self._last_watchdog_focus_fail_info_mono
+                    >= _FOCUS_WATCHDOG_FAIL_INFO_COOLDOWN_SEC
+                ):
+                    self._last_watchdog_focus_fail_info_mono = now_mono
+                    lvl = logging.INFO
+                else:
+                    lvl = logging.DEBUG
+            else:
+                lvl = logging.DEBUG
+        else:
+            lvl = logging.DEBUG
+        _LOG.log(
+            lvl,
+            "Focus reclaim: reason=%s win32_foreground=%s focus_ok=%s focus_widget=%r",
+            reason,
+            used_win32,
+            focus_ok,
+            self.root.focus_get(),
+        )
 
     def _release_topmost_brief(self) -> None:
         self._release_topmost_job = None
@@ -339,7 +434,7 @@ class ScoreboardApp:
         self.focus_watchdog_ticks_left -= 1
 
         if not self.replay.replay_video_active:
-            self.claim_keyboard_focus()
+            self.claim_keyboard_focus(reason="watchdog")
 
         self._focus_watchdog_job = self.scheduler.schedule(
             self.settings.focus_watchdog_interval_ms,
@@ -375,12 +470,14 @@ class ScoreboardApp:
             if os.name == "nt":
                 win32_force_foreground(hwnd)
             win32_synthetic_click_window_center(hwnd)
-            _LOG.debug(
-                "Synthetic focus click attempt %s hwnd=%s",
+            _LOG.info(
+                "Focus: synthetic click attempt %s/3 (hwnd=%s); follow-up reclaim",
                 self._synthetic_click_attempts,
                 hwnd,
             )
-            self.claim_keyboard_focus()
+            self.claim_keyboard_focus(
+                reason=f"after_synthetic_click_{self._synthetic_click_attempts}",
+            )
         except (tk.TclError, ValueError, TypeError):
             _LOG.debug("Synthetic focus click failed", exc_info=True)
 
@@ -547,6 +644,7 @@ class ScoreboardApp:
             self.black_screen_active = False
             self._hide_black_screen_cover()
             self.recording_overlay.lift()
+            self.rearm_focus_watchdog_after_transition("black_screen_off_reset")
 
         self.score_a = 0
         self.score_b = 0

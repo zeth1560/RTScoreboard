@@ -25,7 +25,10 @@ def main() -> None:
         log.exception("Failed to load settings; exiting")
         sys.exit(1)
 
-    configure_logging(logging.DEBUG if settings.scoreboard_debug else logging.INFO)
+    configure_logging(
+        logging.DEBUG if settings.scoreboard_debug else logging.INFO,
+        log_file=settings.scoreboard_log_file or None,
+    )
 
     validate_startup_critical(settings)
 

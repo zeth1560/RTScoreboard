@@ -633,7 +633,8 @@ class ReplayController:
             )
             self._canvas.tag_raise(self._overlay_canvas_id)
             self._root.update_idletasks()
-            self._root.update()
+            # Avoid root.update(): full event-loop processing here can re-enter handlers and
+            # contribute to flaky transitions; idletasks is enough for geometry/paint.
             self._set_phase(ReplayPhase.SLATE_VISIBLE)
             _LOG.info("Replay: scoreboard restored after intentional video stop (slate visible)")
 
@@ -722,7 +723,7 @@ class ReplayController:
             )
             self._canvas.tag_raise(self._overlay_canvas_id)
             self._root.update_idletasks()
-            self._root.update()
+            # Avoid root.update(): see stop_replay_video_and_return (re-entrancy / timing).
             self._set_phase(ReplayPhase.SLATE_VISIBLE)
             _LOG.info("Replay: scoreboard restored after mpv exit; holding slate before fade-out")
             self._return_slate_job = self._scheduler.schedule(
