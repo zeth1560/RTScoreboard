@@ -88,6 +88,13 @@ class RecordingOverlay:
             RecordingOverlayState.SESSION_END_INFO,
         )
 
+    def is_ended_message_showing(self) -> bool:
+        """Slates after max length / session end; avoid synthetic clicks that steal dismiss focus."""
+        return self._state in (
+            RecordingOverlayState.ENDED_MESSAGE,
+            RecordingOverlayState.SESSION_END_INFO,
+        )
+
     def can_start_countdown_from_hotkey(self) -> bool:
         return self._state not in (
             RecordingOverlayState.ENDED_MESSAGE,
@@ -626,6 +633,14 @@ class RecordingOverlay:
             self._ended_dismiss_fire,
             name="recording_ended_auto_dismiss",
         )
+
+    def _grab_focus_for_dismiss_hotkey(self) -> None:
+        """After the ended slate appears, ensure the overlay receives the operator dismiss chord."""
+        try:
+            if self._toplevel is not None:
+                self._toplevel.focus_force()
+        except tk.TclError:
+            _LOG.debug("recording dismiss focus grab failed", exc_info=True)
 
     def _show_session_end_info(self) -> None:
         self._ensure_widgets()
