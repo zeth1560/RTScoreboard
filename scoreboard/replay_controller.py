@@ -86,6 +86,14 @@ class ReplayController:
 
         self._fade_frames: list[ImageTk.PhotoImage] = []
         self._current_overlay_photo: ImageTk.PhotoImage = transparent_overlay_photo
+        # Precompute overlay fade frames across after() ticks so the Tk thread is not frozen
+        # (full-screen PIL + PhotoImage work on 1440p/4K can take multiple seconds if done at once).
+        self._fade_build_active = False
+        self._fade_build_steps = 0
+        self._fade_build_start_alpha = 0
+        self._fade_build_end_alpha = 0
+        self._fade_anim_delay_ms = 0
+        self._fade_on_complete: Callable[[], None] | None = None
 
         self._replay_toast_win: tk.Toplevel | None = None
         self._replay_toast_dismiss_job: str | None = None
@@ -133,6 +141,8 @@ class ReplayController:
         self._current_overlay_photo = photo
 
     def cancel_overlay_fade(self) -> None:
+        self._fade_build_active = False
+        self._fade_on_complete = None
         self._scheduler.cancel(self._overlay_fade_job)
         self._overlay_fade_job = None
         self._fade_frames.clear()
@@ -456,13 +466,48 @@ class ReplayController:
     ) -> None:
         self.cancel_overlay_fade()
         self._fade_frames = []
-        for i in range(steps + 1):
-            alpha = start_alpha + (end_alpha - start_alpha) * (i / steps)
-            frame = self._replay_image.copy()
-            frame.putalpha(int(alpha))
-            photo = ImageTk.PhotoImage(frame)
-            self._fade_frames.append(photo)
-        self._animate_overlay_fade(0, delay, on_complete)
+        safe_steps = max(1, steps)
+        self._fade_build_active = True
+        self._fade_build_steps = safe_steps
+        self._fade_build_start_alpha = start_alpha
+        self._fade_build_end_alpha = end_alpha
+        self._fade_anim_delay_ms = delay
+        self._fade_on_complete = on_complete
+        self._overlay_fade_job = self._scheduler.schedule(
+            0,
+            self._continue_overlay_fade_build,
+            name="replay_overlay_fade_build",
+        )
+
+    def _continue_overlay_fade_build(self) -> None:
+        """Build one fade frame per scheduler tick; keeps the UI responsive on large displays."""
+        self._overlay_fade_job = None
+        if not self._fade_build_active:
+            return
+        steps = self._fade_build_steps
+        i = len(self._fade_frames)
+        if i > steps:
+            self._fade_build_active = False
+            on_complete = self._fade_on_complete
+            self._fade_on_complete = None
+            if on_complete is None:
+                return
+            self._animate_overlay_fade(0, self._fade_anim_delay_ms, on_complete)
+            return
+        t = i / steps
+        alpha = int(
+            self._fade_build_start_alpha
+            + (self._fade_build_end_alpha - self._fade_build_start_alpha) * t
+        )
+        frame = self._replay_image.copy()
+        frame.putalpha(alpha)
+        photo = ImageTk.PhotoImage(frame)
+        self._fade_frames.append(photo)
+        self._overlay_fade_job = self._scheduler.schedule(
+            1,
+            self._continue_overlay_fade_build,
+            name="replay_overlay_fade_build",
+        )
 
     def _animate_overlay_fade(
         self,

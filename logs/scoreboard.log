@@ -805,3 +805,277 @@ focus_watchdog_interval_ms=3000
 2026-04-13 16:21:33 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
 2026-04-13 16:21:43 INFO [scoreboard.app] Application shutdown requested
 2026-04-13 16:21:43 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-13 17:27:55 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1280x720
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mp4'
+  slideshow_enabled=True dir_ok=True image_count=28
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+2026-04-13 17:27:55 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mp4'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-13 17:27:55 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 7-10
+2026-04-13 17:27:56 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True log_file='logs/scoreboard.log'
+2026-04-13 17:27:58 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=131352); follow-up reclaim
+2026-04-13 17:27:58 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:28:02 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=131352); follow-up reclaim
+2026-04-13 17:28:02 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:28:08 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=131352); follow-up reclaim
+2026-04-13 17:28:08 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:29:34 INFO [scoreboard.app] Application shutdown requested
+2026-04-13 17:29:34 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-13 17:33:53 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1280x720
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mp4'
+  slideshow_enabled=True dir_ok=True image_count=28
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+2026-04-13 17:33:53 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mp4'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-13 17:33:53 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-0
+2026-04-13 17:33:53 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True log_file='logs/scoreboard.log'
+2026-04-13 17:33:56 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=262416); follow-up reclaim
+2026-04-13 17:33:56 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:33:59 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=262416); follow-up reclaim
+2026-04-13 17:33:59 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:34:04 INFO [scoreboard.app] Focus: re-arming watchdog after black_screen_off (~750 s of periodic reclaim, interval 3000ms)
+2026-04-13 17:34:05 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=262416); follow-up reclaim
+2026-04-13 17:34:05 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:34:07 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-13 17:34:07 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-13 17:34:07 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-13 17:34:07 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-13 17:34:07 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-13 17:34:07 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 3000 ms
+2026-04-13 17:34:10 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=44030125 mtime=2026-04-13T17:29:55
+2026-04-13 17:34:10 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=255 max=120)
+2026-04-13 17:34:10 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-13 17:34:10 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-13 17:34:10 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-13 17:34:10 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-13 17:34:18 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-13 17:34:18 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-13 17:34:18 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-13 17:34:18 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-13 17:34:18 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-13 17:34:18 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 3000 ms
+2026-04-13 17:34:21 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=68618494 mtime=2026-04-13T17:34:17
+2026-04-13 17:34:21 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=4 size_bytes=68618494
+2026-04-13 17:34:21 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mp4
+2026-04-13 17:34:22 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=12756
+2026-04-13 17:34:22 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-13 17:34:31 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=12756 code=0
+2026-04-13 17:34:31 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-13 17:34:31 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-13 17:34:31 INFO [scoreboard.replay_controller] Replay: toggle requested showing=True video_active=False phase=SLATE_VISIBLE
+2026-04-13 17:34:31 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-13 17:34:31 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-13 17:34:33 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-13 17:34:33 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-13 17:34:33 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-13 17:34:54 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-13 17:34:54 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-13 17:34:54 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-13 17:34:54 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-13 17:34:54 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-13 17:34:54 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 3000 ms
+2026-04-13 17:34:57 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=55849969 mtime=2026-04-13T17:34:53
+2026-04-13 17:34:57 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=3 size_bytes=55849969
+2026-04-13 17:34:57 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mp4
+2026-04-13 17:34:57 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=9548
+2026-04-13 17:34:57 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-13 17:35:43 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=9548 code=0
+2026-04-13 17:35:43 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-13 17:35:43 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-13 17:35:43 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-13 17:35:43 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-13 17:35:44 INFO [scoreboard.app] Application shutdown requested
+2026-04-13 17:35:44 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-13 17:35:44 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-13 17:37:59 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1280x720
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mp4'
+  slideshow_enabled=True dir_ok=True image_count=28
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+2026-04-13 17:37:59 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mp4'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-13 17:37:59 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-0
+2026-04-13 17:37:59 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True log_file='logs/scoreboard.log'
+2026-04-13 17:38:02 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=591358); follow-up reclaim
+2026-04-13 17:38:02 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:38:05 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=591358); follow-up reclaim
+2026-04-13 17:38:05 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:38:11 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=591358); follow-up reclaim
+2026-04-13 17:38:11 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-13 17:38:21 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-13 17:38:21 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-13 17:38:21 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-13 17:38:22 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-13 17:38:22 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-13 17:38:22 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 3000 ms
+2026-04-13 17:38:25 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=53302517 mtime=2026-04-13T17:38:21
+2026-04-13 17:38:25 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=3 size_bytes=53302517
+2026-04-13 17:38:25 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mp4
+2026-04-13 17:38:25 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=7456
+2026-04-13 17:38:25 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-13 17:38:49 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=7456 code=0
+2026-04-13 17:38:49 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-13 17:38:49 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-13 17:38:49 INFO [scoreboard.replay_controller] Replay: toggle requested showing=True video_active=False phase=SLATE_VISIBLE
+2026-04-13 17:38:49 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-13 17:38:49 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-13 17:38:49 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-13 17:38:49 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-13 17:38:49 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-13 17:38:51 INFO [scoreboard.recording_overlay] Recording overlay widgets created
+2026-04-13 17:38:51 INFO [scoreboard.recording_overlay] Recording overlay: countdown started (max 20 min)
+2026-04-13 17:38:54 INFO [scoreboard.recording_overlay] Recording overlay: session end info shown
+2026-04-13 17:38:59 INFO [scoreboard.recording_overlay] Recording overlay: hidden
+2026-04-13 17:39:14 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-13 17:39:14 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-13 17:39:14 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-13 17:39:14 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-13 17:39:14 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-13 17:39:14 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 3000 ms
+2026-04-13 17:39:17 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=52416855 mtime=2026-04-13T17:39:13
+2026-04-13 17:39:17 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=3 size_bytes=52416855
+2026-04-13 17:39:17 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mp4
+2026-04-13 17:39:17 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=8180
+2026-04-13 17:39:17 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-13 17:39:41 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=8180 code=0
+2026-04-13 17:39:41 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-13 17:39:41 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-13 17:39:41 INFO [scoreboard.replay_controller] Replay: toggle requested showing=True video_active=False phase=SLATE_VISIBLE
+2026-04-13 17:39:41 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-13 17:39:41 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-13 17:39:42 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-13 17:39:42 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-13 17:39:42 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-13 17:39:45 INFO [scoreboard.recording_overlay] Recording overlay: countdown started (max 20 min)
+2026-04-13 17:39:53 INFO [scoreboard.recording_overlay] Recording overlay: session end info shown
+2026-04-13 17:39:58 INFO [scoreboard.recording_overlay] Recording overlay: hidden
+2026-04-13 17:51:01 INFO [scoreboard.app] Application shutdown requested
+2026-04-13 17:51:01 INFO [scoreboard.replay_controller] Replay: teardown
