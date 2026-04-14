@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 import time
 import tkinter as tk
 from collections.abc import Callable
@@ -13,6 +14,7 @@ from PIL import Image, ImageTk
 
 from scoreboard.config.settings import Settings, load_settings
 from scoreboard.hotkeys import bind_recording_hotkey, bind_recording_hotkey_global
+from scoreboard.obs_health import check_obs_recording_gate, probe_obs_video_recorder_ready
 from scoreboard.persistence.score_store import load_scores, save_scores
 from scoreboard.platform.win32 import win32_force_foreground, win32_synthetic_click_window_center
 from scoreboard.recording_overlay import RecordingOverlay
@@ -24,6 +26,11 @@ _LOG = logging.getLogger(__name__)
 
 # Watchdog focus_ok=False: at most one INFO line per this many seconds (pilot log noise).
 _FOCUS_WATCHDOG_FAIL_INFO_COOLDOWN_SEC = 30.0
+
+# Stream Deck: three simultaneous plain-key buttons (q + r + p) → OBS restart (optional).
+_OBS_RESTART_CHORD_KEYS = frozenset({"q", "r", "p"})
+_OBS_RESTART_CHORD_DEBOUNCE_MS = 75
+_OBS_RESTART_COOLDOWN_SEC = 8.0
 
 
 class ScoreboardApp:
@@ -50,6 +57,16 @@ class ScoreboardApp:
         self._synthetic_click_jobs: list[str | None] = []
         self._release_topmost_job: str | None = None
         self._heartbeat_job: str | None = None
+        self._recording_obs_check_in_flight = False
+        self._obs_chord_pressed: set[str] = set()
+        self._obs_chord_after_id: str | None = None
+        self._obs_restart_last_mono = 0.0
+        self._obs_status_win: tk.Toplevel | None = None
+        self._obs_status_inner: tk.Frame | None = None
+        self._obs_status_label: tk.Label | None = None
+        self._obs_status_poll_after: str | None = None
+        self._obs_status_lift_after: str | None = None
+        self._obs_status_poll_busy = False
         self.focus_watchdog_ticks_left = 0
         self._focus_watchdog_exhausted_logged = False
         self.last_input_ms = int(time.monotonic() * 1000)
@@ -156,6 +173,7 @@ class ScoreboardApp:
 
         self.canvas.tag_raise(self.overlay_canvas)
 
+        self._setup_obs_status_indicator()
         self._bind_keys()
         self.schedule_idle_check()
         self.schedule_claim_focus()
@@ -169,9 +187,15 @@ class ScoreboardApp:
         log_path = (self.settings.scoreboard_log_file or "").strip()
         _LOG.info(
             "Startup readiness: streamdeck_hotkeys=deferred replay_enabled=%s "
-            "recording_overlay=ok scheduler=ok synthetic_focus_click=%s log_file=%s",
+            "recording_overlay=ok scheduler=ok synthetic_focus_click=%s "
+            "obs_recording_gate=%s obs_restart_chord=%s obs_status_indicator=%s log_file=%s",
             self.settings.replay_enabled,
             self.settings.synthetic_focus_click,
+            "on"
+            if self.settings.recording_obs_health_check
+            else "off",
+            "on" if self.settings.obs_restart_chord_enabled else "off",
+            "on" if self.settings.obs_status_indicator_enabled else "off",
             repr(log_path) if log_path else "(stderr only)",
         )
 
@@ -194,27 +218,169 @@ class ScoreboardApp:
                 w.configure(cursor=cursor)
             except tk.TclError:
                 _LOG.debug("cursor=%r skipped for widget", cursor, exc_info=True)
+        if self._obs_status_win is not None:
+            try:
+                self._obs_status_win.configure(cursor=cursor)
+            except tk.TclError:
+                _LOG.debug("cursor=%r skipped for obs status", cursor, exc_info=True)
         self.recording_overlay.apply_hidden_cursor()
+
+    def _setup_obs_status_indicator(self) -> None:
+        if not self.settings.obs_status_indicator_enabled:
+            return
+
+        win = tk.Toplevel(self.root)
+        win.withdraw()
+        win.overrideredirect(True)
+        try:
+            win.attributes("-topmost", True)
+        except tk.TclError:
+            _LOG.debug("obs status: topmost unsupported", exc_info=True)
+        try:
+            win.transient(self.root)
+        except tk.TclError:
+            _LOG.debug("obs status: transient failed", exc_info=True)
+        win.configure(bg="#0d0d0d", highlightthickness=0, cursor="none")
+
+        fz = max(11, min(18, int(self.screen_height * 0.026)))
+        inner = tk.Frame(
+            win,
+            bg="#3d1818",
+            highlightthickness=1,
+            highlightbackground="#5a2d2d",
+        )
+        inner.pack(fill="both", expand=True)
+        lbl = tk.Label(
+            inner,
+            text="VIDEO RECORDER UNAVAILABLE",
+            font=("Segoe UI", fz, "bold"),
+            fg="#ffecec",
+            bg="#3d1818",
+            padx=16,
+            pady=10,
+        )
+        lbl.pack()
+
+        win.update_idletasks()
+        w = max(1, win.winfo_reqwidth())
+        h = max(1, win.winfo_reqheight())
+        x = 12
+        y = max(0, self.screen_height - h - 12)
+        win.geometry(f"{w}x{h}+{x}+{y}")
+        win.deiconify()
+
+        self._obs_status_win = win
+        self._obs_status_inner = inner
+        self._obs_status_label = lbl
+
+        self._obs_status_periodic_lift()
+        self._obs_status_poll_after = self.root.after(300, self._obs_status_poll_tick)
+
+    def _lift_obs_status_window(self) -> None:
+        if self._obs_status_win is None:
+            return
+        try:
+            self._obs_status_win.lift()
+        except tk.TclError:
+            _LOG.debug("obs status lift failed", exc_info=True)
+
+    def _obs_status_periodic_lift(self) -> None:
+        self._lift_obs_status_window()
+        if self._obs_status_win is None:
+            return
+        self._obs_status_lift_after = self.root.after(
+            1200,
+            self._obs_status_periodic_lift,
+        )
+
+    def _apply_obs_status_ready(self, ready: bool) -> None:
+        if self._obs_status_label is None or self._obs_status_inner is None:
+            return
+        if ready:
+            bg = "#163a24"
+            fg = "#e8ffee"
+            hi = "#2d5a3d"
+            text = "VIDEO RECORDER READY"
+        else:
+            bg = "#3d1818"
+            fg = "#ffecec"
+            hi = "#5a2d2d"
+            text = "VIDEO RECORDER UNAVAILABLE"
+        self._obs_status_inner.configure(bg=bg, highlightbackground=hi)
+        self._obs_status_label.configure(text=text, bg=bg, fg=fg)
+
+    def _obs_status_poll_worker(self) -> None:
+        try:
+            ready = probe_obs_video_recorder_ready(self.settings)
+        except Exception:
+            _LOG.debug("OBS status poll failed", exc_info=True)
+            ready = False
+        self.root.after(0, lambda r=ready: self._obs_status_poll_done(r))
+
+    def _obs_status_poll_done(self, ready: bool) -> None:
+        self._obs_status_poll_busy = False
+        if self._obs_status_win is None:
+            return
+        self._apply_obs_status_ready(ready)
+        self._schedule_obs_status_poll_after()
+
+    def _schedule_obs_status_poll_after(self) -> None:
+        if self._obs_status_win is None:
+            return
+        if self._obs_status_poll_after is not None:
+            try:
+                self.root.after_cancel(self._obs_status_poll_after)
+            except (tk.TclError, ValueError):
+                pass
+            self._obs_status_poll_after = None
+        ms = self.settings.obs_status_poll_interval_ms
+        self._obs_status_poll_after = self.root.after(ms, self._obs_status_poll_tick)
+
+    def _obs_status_poll_tick(self) -> None:
+        self._obs_status_poll_after = None
+        if self._obs_status_win is None:
+            return
+        if self._obs_status_poll_busy:
+            self._schedule_obs_status_poll_after()
+            return
+        self._obs_status_poll_busy = True
+        threading.Thread(target=self._obs_status_poll_worker, daemon=True).start()
+
+    def _teardown_obs_status_indicator(self) -> None:
+        if self._obs_status_poll_after is not None:
+            try:
+                self.root.after_cancel(self._obs_status_poll_after)
+            except (tk.TclError, ValueError):
+                pass
+            self._obs_status_poll_after = None
+        if self._obs_status_lift_after is not None:
+            try:
+                self.root.after_cancel(self._obs_status_lift_after)
+            except (tk.TclError, ValueError):
+                pass
+            self._obs_status_lift_after = None
+        if self._obs_status_win is not None:
+            try:
+                self._obs_status_win.destroy()
+            except tk.TclError:
+                pass
+        self._obs_status_win = None
+        self._obs_status_inner = None
+        self._obs_status_label = None
 
     def _bind_keys(self) -> None:
         root = self.root
-        root.bind_all(
-            "q",
-            lambda e: self.on_streamdeck_input(lambda: self.update_score("a", 1)),
-        )
+        root.bind_all("q", lambda e, k="q": self._on_obs_restart_chord_key(k, e))
         root.bind_all(
             "a",
             lambda e: self.on_streamdeck_input(lambda: self.update_score("a", -1)),
         )
-        root.bind_all(
-            "p",
-            lambda e: self.on_streamdeck_input(lambda: self.update_score("b", 1)),
-        )
+        root.bind_all("p", lambda e, k="p": self._on_obs_restart_chord_key(k, e))
         root.bind_all(
             "l",
             lambda e: self.on_streamdeck_input(lambda: self.update_score("b", -1)),
         )
-        root.bind_all("r", lambda e: self.on_streamdeck_input(self.reset_scores))
+        root.bind_all("r", lambda e, k="r": self._on_obs_restart_chord_key(k, e))
         root.bind_all("i", lambda e: self.on_streamdeck_input(self.toggle_replay))
         bind_recording_hotkey(
             root,
@@ -248,6 +414,62 @@ class ScoreboardApp:
             lambda e: self.on_streamdeck_input(self.toggle_black_screen),
         )
         root.bind_all("<Escape>", lambda e: self.root.after(0, self.close_app))
+
+    def _dispatch_chord_colocated_action(self, key: str) -> None:
+        if key == "q":
+            self.on_streamdeck_input(lambda: self.update_score("a", 1))
+        elif key == "p":
+            self.on_streamdeck_input(lambda: self.update_score("b", 1))
+        elif key == "r":
+            self.on_streamdeck_input(self.reset_scores)
+
+    def _on_obs_restart_chord_key(self, key: str, _event: tk.Event) -> None:
+        if not self.settings.obs_restart_chord_enabled:
+            self._dispatch_chord_colocated_action(key)
+            return
+        self._obs_chord_pressed.add(key)
+        if self._obs_chord_after_id is not None:
+            self.root.after_cancel(self._obs_chord_after_id)
+        self._obs_chord_after_id = self.root.after(
+            _OBS_RESTART_CHORD_DEBOUNCE_MS,
+            self._flush_obs_restart_chord,
+        )
+
+    def _flush_obs_restart_chord(self) -> None:
+        self._obs_chord_after_id = None
+        pressed = self._obs_chord_pressed
+        self._obs_chord_pressed = set()
+        if pressed == _OBS_RESTART_CHORD_KEYS:
+            now = time.monotonic()
+            if now - self._obs_restart_last_mono < _OBS_RESTART_COOLDOWN_SEC:
+                _LOG.debug("OBS restart chord ignored (cooldown)")
+                return
+            self._obs_restart_last_mono = now
+            self._trigger_obs_restart_chord()
+            return
+        for k in ("q", "p", "r"):
+            if k in pressed:
+                self._dispatch_chord_colocated_action(k)
+
+    def _trigger_obs_restart_chord(self) -> None:
+        self.last_input_ms = int(time.monotonic() * 1000)
+        if self.screensaver.is_active():
+            self.screensaver.stop()
+        _LOG.info("OBS restart chord (Q+R+P): background restart scheduled")
+        threading.Thread(target=self._obs_restart_worker, daemon=True).start()
+
+    def _obs_restart_worker(self) -> None:
+        from scoreboard.obs_restart import restart_obs_pipeline
+
+        try:
+            ok, msg = restart_obs_pipeline(self.settings)
+        except Exception:
+            _LOG.exception("OBS restart pipeline failed")
+            return
+        if ok:
+            _LOG.info("OBS restart finished: %s", msg)
+        else:
+            _LOG.warning("OBS restart finished: %s", msg)
 
     @property
     def score_a(self) -> int:
@@ -287,7 +509,38 @@ class ScoreboardApp:
     def on_recording_start_hotkey(self) -> None:
         if not self.recording_overlay.can_start_countdown_from_hotkey():
             return
-        self.recording_overlay.start_or_restart_countdown()
+        if self.settings.recording_obs_health_check:
+            if self._recording_obs_check_in_flight:
+                _LOG.debug("Recording OBS check already running; ignoring duplicate start hotkey")
+                return
+            self._recording_obs_check_in_flight = True
+            threading.Thread(
+                target=self._recording_start_obs_check_worker,
+                daemon=True,
+            ).start()
+        else:
+            self.recording_overlay.start_or_restart_countdown()
+
+    def _recording_start_obs_check_worker(self) -> None:
+        try:
+            ok, msg = check_obs_recording_gate(self.settings)
+        except Exception:
+            _LOG.exception("OBS recording gate failed unexpectedly")
+            ok, msg = False, "Could not verify OBS (unexpected error); see logs."
+        self.root.after(
+            0,
+            lambda o=ok, m=msg: self._on_recording_obs_check_done(o, m),
+        )
+
+    def _on_recording_obs_check_done(self, ok: bool, msg: str) -> None:
+        self._recording_obs_check_in_flight = False
+        if ok:
+            if not self.recording_overlay.can_start_countdown_from_hotkey():
+                return
+            self.recording_overlay.start_or_restart_countdown()
+            return
+        _LOG.warning("Recording overlay not started: %s", msg)
+        self.replay.show_replay_unavailable_graphic_overlay()
 
     def _on_recording_dismiss_chord(self, _event: tk.Event | None = None) -> None:
         """Dismiss chord: do not let screensaver-only short-circuit skip dismiss."""
@@ -311,6 +564,7 @@ class ScoreboardApp:
         self.black_screen_frame.lift()
         self.black_screen_cover_visible = True
         self.recording_overlay.lift()
+        self._lift_obs_status_window()
 
     def _hide_black_screen_cover(self) -> None:
         if not self.black_screen_cover_visible:
@@ -334,6 +588,7 @@ class ScoreboardApp:
             self._hide_black_screen_cover()
             self.rearm_focus_watchdog_after_transition("black_screen_off")
         self.recording_overlay.lift()
+        self._lift_obs_status_window()
 
     def schedule_claim_focus(self) -> None:
         for jid in self._focus_claim_jobs:
@@ -534,6 +789,7 @@ class ScoreboardApp:
 
     def close_app(self) -> None:
         _LOG.info("Application shutdown requested")
+        self._teardown_obs_status_indicator()
         for jid in self._focus_claim_jobs:
             self.scheduler.cancel(jid)
         self._focus_claim_jobs.clear()
@@ -674,6 +930,7 @@ class ScoreboardApp:
 
         self.canvas.tag_raise(self.overlay_canvas)
         self.recording_overlay.lift()
+        self._lift_obs_status_window()
 
     def update_score(self, team: str, delta: int) -> None:
         if self.black_screen_active:
@@ -705,6 +962,8 @@ class ScoreboardApp:
         self.save_state()
 
     def toggle_replay(self) -> None:
+        if self.replay.dismiss_replay_unavailable_overlay():
+            return
         if not self.settings.replay_enabled:
             _LOG.info("Replay hotkey ignored: REPLAY_ENABLED=0")
             return

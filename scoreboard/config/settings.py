@@ -21,6 +21,7 @@ DEFAULT_SCOREBOARD_BG = "Score BG.png"
 DEFAULT_REPLAY_SLATE = "ir slate.png"
 DEFAULT_SLIDESHOW_DIR = r"C:\Users\admin\Dropbox\slideshow"
 DEFAULT_REPLAY_VIDEO_PATH = r"C:\ReplayTrove\INSTANTREPLAY.mp4"
+DEFAULT_REPLAY_UNAVAILABLE_IMAGE = "assets/replay_unavailable.png"
 
 IDLE_TIMEOUT_MS = 30 * 60 * 1000
 SLIDESHOW_INTERVAL_MS = 12 * 1000
@@ -98,6 +99,23 @@ def _parse_int_env(raw: str | None, default: int, name: str) -> int:
         return default
 
 
+def _parse_float_env(raw: str | None, default: float, name: str) -> float:
+    if raw is None or str(raw).strip() == "":
+        return default
+    try:
+        v = float(str(raw).strip())
+        if v < 0.25:
+            _LOG.warning("%s=%r too low; using 0.25", name, raw)
+            return 0.25
+        if v > 30.0:
+            _LOG.warning("%s=%r too high; using 30.0", name, raw)
+            return 30.0
+        return v
+    except (TypeError, ValueError):
+        _LOG.warning("%s=%r invalid; using default %s", name, raw, default)
+        return default
+
+
 def _normalize_path(p: str | None) -> str:
     if p is None:
         return ""
@@ -114,6 +132,7 @@ class Settings:
     replay_slate_image: str
     slideshow_dir: str
     replay_video_path: str
+    replay_unavailable_image: str
     mpv_path: str | None
 
     # mpv / replay
@@ -168,6 +187,24 @@ class Settings:
     replay_slate_stuck_timeout_ms: int = REPLAY_SLATE_STUCK_TIMEOUT_MS
     replay_file_max_age_seconds: int = DEFAULT_REPLAY_FILE_MAX_AGE_SECONDS
 
+    # OBS WebSocket (optional gate before recording overlay — RECORDING_OBS_HEALTH_CHECK).
+    recording_obs_health_check: bool = False
+    obs_websocket_host: str = "localhost"
+    obs_websocket_port: int = 4455
+    obs_websocket_password: str = ""
+    obs_websocket_timeout_sec: float = 2.0
+    recording_obs_block_if_main_recording: bool = True
+
+    # OBS restart chord (Q+R+P): Windows only; see scoreboard.obs_restart.
+    obs_restart_chord_enabled: bool = False
+    obs_executable: str = ""
+    obs_restart_start_replay_buffer: bool = True
+    obs_restart_post_launch_delay_ms: int = 4500
+
+    # Bottom-left OBS status strip (WebSocket probe; independent of RECORDING_OBS_HEALTH_CHECK).
+    obs_status_indicator_enabled: bool = True
+    obs_status_poll_interval_ms: int = 4000
+
 
 def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
     """Load .env into os.environ, then build and validate Settings."""
@@ -190,6 +227,9 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
     replay_video_path = _normalize_path(
         g("REPLAY_VIDEO_PATH", DEFAULT_REPLAY_VIDEO_PATH) or DEFAULT_REPLAY_VIDEO_PATH
     )
+    replay_unavailable_image = _normalize_path(
+        g("REPLAY_UNAVAILABLE_IMAGE", DEFAULT_REPLAY_UNAVAILABLE_IMAGE)
+    ) or DEFAULT_REPLAY_UNAVAILABLE_IMAGE
     mpv_path_raw = _normalize_path(g("MPV_PATH"))
     mpv_path = mpv_path_raw if mpv_path_raw else None
 
@@ -361,6 +401,52 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         minimum=0,
     )
 
+    recording_obs_health_check = _env_truthy(g("RECORDING_OBS_HEALTH_CHECK"), False)
+    obs_websocket_host = (g("OBS_WEBSOCKET_HOST", "localhost") or "localhost").strip()
+    obs_websocket_port = _parse_positive_int(
+        g("OBS_WEBSOCKET_PORT", "4455"),
+        4455,
+        "OBS_WEBSOCKET_PORT",
+        minimum=1,
+    )
+    if obs_websocket_port > 65535:
+        _LOG.warning("OBS_WEBSOCKET_PORT=%s above 65535; using 4455", obs_websocket_port)
+        obs_websocket_port = 4455
+    obs_websocket_password = g("OBS_WEBSOCKET_PASSWORD", "") or ""
+    obs_websocket_timeout_sec = _parse_float_env(
+        g("OBS_WEBSOCKET_TIMEOUT_SEC", "2.0"),
+        2.0,
+        "OBS_WEBSOCKET_TIMEOUT_SEC",
+    )
+    recording_obs_block_if_main_recording = _env_truthy(
+        g("RECORDING_OBS_BLOCK_IF_MAIN_RECORDING", "1"),
+        True,
+    )
+
+    obs_restart_chord_enabled = _env_truthy(g("OBS_RESTART_CHORD_ENABLED"), False)
+    obs_executable = _normalize_path(g("OBS_EXECUTABLE", "") or "")
+    obs_restart_start_replay_buffer = _env_truthy(
+        g("OBS_RESTART_START_REPLAY_BUFFER", "1"),
+        True,
+    )
+    obs_restart_post_launch_delay_ms = _parse_positive_int(
+        g("OBS_RESTART_POST_LAUNCH_DELAY_MS", "4500"),
+        4500,
+        "OBS_RESTART_POST_LAUNCH_DELAY_MS",
+        minimum=500,
+    )
+
+    obs_status_indicator_enabled = _env_truthy(
+        g("OBS_STATUS_INDICATOR_ENABLED", "1"),
+        True,
+    )
+    obs_status_poll_interval_ms = _parse_positive_int(
+        g("OBS_STATUS_POLL_INTERVAL_MS", "4000"),
+        4000,
+        "OBS_STATUS_POLL_INTERVAL_MS",
+        minimum=1500,
+    )
+
     focus_watchdog_interval_ms = _parse_positive_int(
         g("FOCUS_WATCHDOG_INTERVAL_MS", str(FOCUS_WATCHDOG_INTERVAL_MS)),
         FOCUS_WATCHDOG_INTERVAL_MS,
@@ -392,6 +478,7 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         replay_slate_image=replay_slate,
         slideshow_dir=slideshow_dir,
         replay_video_path=replay_video_path,
+        replay_unavailable_image=replay_unavailable_image,
         mpv_path=mpv_path,
         mpv_exit_hotkey=mpv_exit,
         mpv_embedded=mpv_embedded,
@@ -423,6 +510,18 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         replay_transition_timeout_ms=transition_timeout,
         replay_slate_stuck_timeout_ms=slate_stuck_timeout,
         replay_file_max_age_seconds=replay_file_max_age_seconds,
+        recording_obs_health_check=recording_obs_health_check,
+        obs_websocket_host=obs_websocket_host,
+        obs_websocket_port=obs_websocket_port,
+        obs_websocket_password=obs_websocket_password,
+        obs_websocket_timeout_sec=obs_websocket_timeout_sec,
+        recording_obs_block_if_main_recording=recording_obs_block_if_main_recording,
+        obs_restart_chord_enabled=obs_restart_chord_enabled,
+        obs_executable=obs_executable,
+        obs_restart_start_replay_buffer=obs_restart_start_replay_buffer,
+        obs_restart_post_launch_delay_ms=obs_restart_post_launch_delay_ms,
+        obs_status_indicator_enabled=obs_status_indicator_enabled,
+        obs_status_poll_interval_ms=obs_status_poll_interval_ms,
         focus_watchdog_interval_ms=focus_watchdog_interval_ms,
         focus_watchdog_ticks=focus_watchdog_ticks,
     )
@@ -466,6 +565,7 @@ def summarize_settings(settings: Settings) -> str:
         f"replay_slate_image={settings.replay_slate_image!r}",
         f"slideshow_dir={settings.slideshow_dir!r}",
         f"replay_video_path={settings.replay_video_path!r}",
+        f"replay_unavailable_image={settings.replay_unavailable_image!r}",
         f"mpv_path={settings.mpv_path!r}",
         f"mpv_embedded={settings.mpv_embedded}",
         f"mpv_exit_hotkey={settings.mpv_exit_hotkey!r}",
@@ -493,6 +593,17 @@ def summarize_settings(settings: Settings) -> str:
         f"replay_transition_timeout_ms={settings.replay_transition_timeout_ms}",
         f"replay_slate_stuck_timeout_ms={settings.replay_slate_stuck_timeout_ms}",
         f"replay_file_max_age_seconds={settings.replay_file_max_age_seconds}",
+        f"recording_obs_health_check={settings.recording_obs_health_check}",
+        f"obs_websocket_host={settings.obs_websocket_host!r}",
+        f"obs_websocket_port={settings.obs_websocket_port}",
+        f"obs_websocket_timeout_sec={settings.obs_websocket_timeout_sec}",
+        f"recording_obs_block_if_main_recording={settings.recording_obs_block_if_main_recording}",
+        f"obs_restart_chord_enabled={settings.obs_restart_chord_enabled}",
+        f"obs_executable={settings.obs_executable!r}",
+        f"obs_restart_start_replay_buffer={settings.obs_restart_start_replay_buffer}",
+        f"obs_restart_post_launch_delay_ms={settings.obs_restart_post_launch_delay_ms}",
+        f"obs_status_indicator_enabled={settings.obs_status_indicator_enabled}",
+        f"obs_status_poll_interval_ms={settings.obs_status_poll_interval_ms}",
         f"focus_watchdog_ticks={settings.focus_watchdog_ticks}",
         f"focus_watchdog_interval_ms={settings.focus_watchdog_interval_ms}",
     ]

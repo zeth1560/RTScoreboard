@@ -20,13 +20,15 @@ from scoreboard.scheduler import AfterScheduler
 
 _LOG = logging.getLogger(__name__)
 
-# Shown whenever replay cannot run after the operator invokes it (logs stay specific).
+# Fallback if REPLAY_UNAVAILABLE_IMAGE is missing or unreadable (logs stay specific).
 REPLAY_UNAVAILABLE_USER_MESSAGE = (
     "Sorry…the squirrels that make this contraption work stayed up partying way too late "
     "last night, and they are all currently either asleep, hungover, or puking in the "
     "restroom. We will give them a stern talking to, and hopefully have better luck with "
     "this doohickey next time."
 )
+
+_REPLAY_UNAVAILABLE_TOAST_MS = 15_000
 
 
 class ReplayPhase(enum.Enum):
@@ -96,6 +98,7 @@ class ReplayController:
         self._fade_on_complete: Callable[[], None] | None = None
 
         self._replay_toast_win: tk.Toplevel | None = None
+        self._replay_toast_photo: ImageTk.PhotoImage | None = None
         self._replay_toast_dismiss_job: str | None = None
         self._last_replayed_file_mtime: float | None = None
         self._replay_pending_mtime: float | None = None
@@ -294,6 +297,7 @@ class ReplayController:
     def _dismiss_replay_unavailable_toast(self) -> None:
         self._scheduler.cancel(self._replay_toast_dismiss_job)
         self._replay_toast_dismiss_job = None
+        self._replay_toast_photo = None
         if self._replay_toast_win is not None:
             try:
                 self._replay_toast_win.destroy()
@@ -301,47 +305,108 @@ class ReplayController:
                 pass
             self._replay_toast_win = None
 
-    def _show_replay_unavailable_toast(self) -> None:
-        """Brief non-blocking on-screen notice; does not grab focus or block the event loop."""
+    def dismiss_replay_unavailable_overlay(self) -> bool:
+        """If the fullscreen unavailable graphic is up, dismiss it (replay hotkey ``i``)."""
+        if self._replay_toast_win is None:
+            return False
         self._dismiss_replay_unavailable_toast()
+        return True
+
+    def show_replay_unavailable_graphic_overlay(self) -> None:
+        """Same fullscreen asset as failed replay (``REPLAY_UNAVAILABLE_IMAGE`` / fallback text)."""
+        self._show_replay_unavailable_toast()
+
+    def _try_build_replay_unavailable_photo(self) -> tuple[ImageTk.PhotoImage, int, int] | None:
+        path = self._settings.replay_unavailable_image
+        if not path or not os.path.isfile(path):
+            _LOG.warning("Replay unavailable image missing: %s", path)
+            return None
+        try:
+            sw = max(1, self._root.winfo_screenwidth())
+            sh = max(1, self._root.winfo_screenheight())
+            with Image.open(path) as img:
+                rgba = img.convert("RGBA")
+                iw, ih = rgba.size
+                scale = min(sw / iw, sh / ih)
+                nw = max(1, int(iw * scale))
+                nh = max(1, int(ih * scale))
+                if (nw, nh) != (iw, ih):
+                    rgba = rgba.resize((nw, nh), Image.Resampling.LANCZOS)
+                photo = ImageTk.PhotoImage(rgba)
+            return (photo, nw, nh)
+        except OSError:
+            _LOG.exception("Replay unavailable image load failed: %s", path)
+            return None
+
+    def _show_replay_unavailable_toast(self) -> None:
+        """Fullscreen graphic (replay failure, OBS gate failure, etc.); 15s or hotkey ``i``."""
+        self._dismiss_replay_unavailable_toast()
+        sw = max(1, self._root.winfo_screenwidth())
+        sh = max(1, self._root.winfo_screenheight())
         try:
             win = tk.Toplevel(self._root)
             win.overrideredirect(True)
             try:
                 win.attributes("-topmost", True)
             except tk.TclError:
-                _LOG.debug("replay toast topmost failed", exc_info=True)
-            win.configure(bg="#1a1a1a")
-            sw0 = self._root.winfo_screenwidth()
-            wrap = min(960, max(320, sw0 - 120))
-            frame = tk.Frame(win, bg="#1a1a1a", highlightthickness=1, highlightbackground="#555555")
-            frame.pack(fill="both", expand=True)
-            tk.Label(
-                frame,
-                text=REPLAY_UNAVAILABLE_USER_MESSAGE,
-                fg="#f0f0f0",
-                bg="#1a1a1a",
-                font=("Arial", 14),
-                justify="center",
-                wraplength=wrap,
-                padx=26,
-                pady=20,
-            ).pack()
-            win.update_idletasks()
-            sw = self._root.winfo_screenwidth()
-            sh = self._root.winfo_screenheight()
-            ww = win.winfo_reqwidth()
-            wh = win.winfo_reqheight()
-            x = max(0, (sw - ww) // 2)
-            y = max(0, (sh - wh) // 2)
-            win.geometry(f"+{x}+{y}")
+                _LOG.debug("replay unavailable topmost failed", exc_info=True)
+            win.configure(bg="black", cursor="none")
+            win.geometry(f"{sw}x{sh}+0+0")
+
+            def _dismiss_ev(_e: tk.Event | None = None) -> str:
+                self._dismiss_replay_unavailable_toast()
+                return "break"
+
+            win.bind("<KeyPress-i>", _dismiss_ev)
+            win.bind("<KeyPress-I>", _dismiss_ev)
+
+            built = self._try_build_replay_unavailable_photo()
+            if built is not None:
+                photo, nw, nh = built
+                self._replay_toast_photo = photo
+                canvas = tk.Canvas(
+                    win,
+                    width=sw,
+                    height=sh,
+                    highlightthickness=0,
+                    bg="black",
+                    cursor="none",
+                )
+                canvas.pack(fill="both", expand=True)
+                canvas.bind("<KeyPress-i>", _dismiss_ev)
+                canvas.bind("<KeyPress-I>", _dismiss_ev)
+                x = (sw - nw) // 2
+                y = (sh - nh) // 2
+                canvas.create_image(x, y, anchor="nw", image=photo)
+            else:
+                wrap = min(960, max(320, sw - 120))
+                frame = tk.Frame(win, bg="#1a1a1a", highlightthickness=0)
+                frame.pack(fill="both", expand=True)
+                tk.Label(
+                    frame,
+                    text=REPLAY_UNAVAILABLE_USER_MESSAGE,
+                    fg="#f0f0f0",
+                    bg="#1a1a1a",
+                    font=("Arial", 14),
+                    justify="center",
+                    wraplength=wrap,
+                    padx=26,
+                    pady=20,
+                ).pack(expand=True)
+                frame.bind("<KeyPress-i>", _dismiss_ev)
+                frame.bind("<KeyPress-I>", _dismiss_ev)
+
+            try:
+                win.focus_force()
+            except tk.TclError:
+                _LOG.debug("replay unavailable focus_force failed", exc_info=True)
         except tk.TclError:
-            _LOG.debug("replay unavailable toast failed", exc_info=True)
+            _LOG.debug("replay unavailable overlay failed", exc_info=True)
             return
 
         self._replay_toast_win = win
         self._replay_toast_dismiss_job = self._scheduler.schedule(
-            10_000,
+            _REPLAY_UNAVAILABLE_TOAST_MS,
             self._dismiss_replay_unavailable_toast,
             name="replay_unavailable_toast_dismiss",
         )

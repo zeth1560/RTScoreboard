@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from scoreboard.config.settings import Settings, SUPPORTED_IMAGE_EXTENSIONS, summarize_settings
+from scoreboard.obs_restart import resolve_obs_executable
 from scoreboard.hotkeys import parse_recording_hotkey_to_tk_bind
 from scoreboard.version import __version__
 
@@ -152,6 +153,21 @@ def log_pilot_diagnostics_summary(
     st = Path(settings.state_file)
     state_note = "present" if st.is_file() else "absent (will create on save)"
 
+    obs_dep_note = "n/a"
+    if settings.recording_obs_health_check:
+        try:
+            import obsws_python  # noqa: F401
+            obs_dep_note = "obsws-python=OK"
+        except ImportError:
+            obs_dep_note = "obsws-python=MISSING"
+
+    obs_restart_note = "off"
+    if settings.obs_restart_chord_enabled:
+        exe = resolve_obs_executable(settings)
+        obs_restart_note = (
+            f"on exe={'OK ' + exe if exe else 'MISSING (set OBS_EXECUTABLE)'}"
+        )
+
     summary = (
         f"PILOT STARTUP DIAGNOSTICS\n"
         f"  app_version={__version__}\n"
@@ -161,6 +177,9 @@ def log_pilot_diagnostics_summary(
         f"mpv={'OK ' + mpv if mpv else 'MISSING'}\n"
         f"  replay_video={'OK' if Path(settings.replay_video_path).is_file() else 'MISSING'} "
         f"path={settings.replay_video_path!r}\n"
+        f"  replay_unavailable_image="
+        f"{'OK' if Path(settings.replay_unavailable_image).is_file() else 'MISSING'} "
+        f"path={settings.replay_unavailable_image!r}\n"
         f"  slideshow_enabled={settings.slideshow_enabled} "
         f"dir_ok={Path(settings.slideshow_dir).is_dir() if settings.slideshow_enabled else 'n/a'} "
         f"image_count={n_img}\n"
@@ -168,6 +187,12 @@ def log_pilot_diagnostics_summary(
         f"idle_timeout_min={settings.idle_timeout_ms // 60000}\n"
         f"  heartbeat_interval_minutes={settings.heartbeat_interval_minutes} "
         f"(0=off)\n"
+        f"  recording_obs_health_check={settings.recording_obs_health_check} "
+        f"ws={settings.obs_websocket_host!r}:{settings.obs_websocket_port} "
+        f"timeout_sec={settings.obs_websocket_timeout_sec} {obs_dep_note}\n"
+        f"  obs_restart_chord={obs_restart_note}\n"
+        f"  obs_status_indicator={settings.obs_status_indicator_enabled} "
+        f"poll_ms={settings.obs_status_poll_interval_ms}\n"
         f"  scoreboard_debug={settings.scoreboard_debug}\n"
         f"  hotkeys:\n"
         + "\n".join(hotkey_lines)
