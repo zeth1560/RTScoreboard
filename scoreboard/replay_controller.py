@@ -305,6 +305,12 @@ class ReplayController:
                 pass
             self._replay_toast_win = None
 
+    def _renew_replay_unavailable_toast_timeout(self) -> None:
+        self._scheduler.cancel(self._replay_toast_dismiss_job)
+        # Keep the unavailable graphic solidly visible until operator dismisses (hotkey "i").
+        # This avoids periodic hide/show blinking under repeated failure conditions.
+        self._replay_toast_dismiss_job = None
+
     def dismiss_replay_unavailable_overlay(self) -> bool:
         """If the fullscreen unavailable graphic is up, dismiss it (replay hotkey ``i``)."""
         if self._replay_toast_win is None:
@@ -340,7 +346,13 @@ class ReplayController:
 
     def _show_replay_unavailable_toast(self) -> None:
         """Fullscreen graphic (replay failure, OBS gate failure, etc.); 15s or hotkey ``i``."""
-        self._dismiss_replay_unavailable_toast()
+        if self._replay_toast_win is not None:
+            try:
+                self._replay_toast_win.lift()
+            except tk.TclError:
+                _LOG.debug("replay unavailable lift failed", exc_info=True)
+            self._renew_replay_unavailable_toast_timeout()
+            return
         sw = max(1, self._root.winfo_screenwidth())
         sh = max(1, self._root.winfo_screenheight())
         try:
@@ -351,7 +363,6 @@ class ReplayController:
             except tk.TclError:
                 _LOG.debug("replay unavailable topmost failed", exc_info=True)
             win.configure(bg="black", cursor="none")
-            win.geometry(f"{sw}x{sh}+0+0")
 
             def _dismiss_ev(_e: tk.Event | None = None) -> str:
                 self._dismiss_replay_unavailable_toast()
@@ -366,8 +377,8 @@ class ReplayController:
                 self._replay_toast_photo = photo
                 canvas = tk.Canvas(
                     win,
-                    width=sw,
-                    height=sh,
+                    width=nw,
+                    height=nh,
                     highlightthickness=0,
                     bg="black",
                     cursor="none",
@@ -375,9 +386,10 @@ class ReplayController:
                 canvas.pack(fill="both", expand=True)
                 canvas.bind("<KeyPress-i>", _dismiss_ev)
                 canvas.bind("<KeyPress-I>", _dismiss_ev)
+                canvas.create_image(0, 0, anchor="nw", image=photo)
                 x = (sw - nw) // 2
                 y = (sh - nh) // 2
-                canvas.create_image(x, y, anchor="nw", image=photo)
+                win.geometry(f"{nw}x{nh}+{x}+{y}")
             else:
                 wrap = min(960, max(320, sw - 120))
                 frame = tk.Frame(win, bg="#1a1a1a", highlightthickness=0)
@@ -395,6 +407,12 @@ class ReplayController:
                 ).pack(expand=True)
                 frame.bind("<KeyPress-i>", _dismiss_ev)
                 frame.bind("<KeyPress-I>", _dismiss_ev)
+                win.update_idletasks()
+                fw = max(1, win.winfo_reqwidth())
+                fh = max(1, win.winfo_reqheight())
+                x = (sw - fw) // 2
+                y = (sh - fh) // 2
+                win.geometry(f"{fw}x{fh}+{x}+{y}")
 
             try:
                 win.focus_force()
@@ -405,11 +423,7 @@ class ReplayController:
             return
 
         self._replay_toast_win = win
-        self._replay_toast_dismiss_job = self._scheduler.schedule(
-            _REPLAY_UNAVAILABLE_TOAST_MS,
-            self._dismiss_replay_unavailable_toast,
-            name="replay_unavailable_toast_dismiss",
-        )
+        self._renew_replay_unavailable_toast_timeout()
 
     def _commit_replay_file_played(self) -> None:
         if self._replay_pending_mtime is not None:

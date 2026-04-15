@@ -192,7 +192,8 @@ def log_pilot_diagnostics_summary(
         f"timeout_sec={settings.obs_websocket_timeout_sec} {obs_dep_note}\n"
         f"  obs_restart_chord={obs_restart_note}\n"
         f"  obs_status_indicator={settings.obs_status_indicator_enabled} "
-        f"poll_ms={settings.obs_status_poll_interval_ms}\n"
+        f"poll_ms={settings.obs_status_poll_interval_ms} "
+        f"require_main_idle={settings.obs_status_require_main_output_idle}\n"
         f"  scoreboard_debug={settings.scoreboard_debug}\n"
         f"  hotkeys:\n"
         + "\n".join(hotkey_lines)

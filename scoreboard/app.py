@@ -65,7 +65,6 @@ class ScoreboardApp:
         self._obs_status_inner: tk.Frame | None = None
         self._obs_status_label: tk.Label | None = None
         self._obs_status_poll_after: str | None = None
-        self._obs_status_lift_after: str | None = None
         self._obs_status_poll_busy = False
         self.focus_watchdog_ticks_left = 0
         self._focus_watchdog_exhausted_logged = False
@@ -273,25 +272,7 @@ class ScoreboardApp:
         self._obs_status_inner = inner
         self._obs_status_label = lbl
 
-        self._obs_status_periodic_lift()
         self._obs_status_poll_after = self.root.after(300, self._obs_status_poll_tick)
-
-    def _lift_obs_status_window(self) -> None:
-        if self._obs_status_win is None:
-            return
-        try:
-            self._obs_status_win.lift()
-        except tk.TclError:
-            _LOG.debug("obs status lift failed", exc_info=True)
-
-    def _obs_status_periodic_lift(self) -> None:
-        self._lift_obs_status_window()
-        if self._obs_status_win is None:
-            return
-        self._obs_status_lift_after = self.root.after(
-            1200,
-            self._obs_status_periodic_lift,
-        )
 
     def _apply_obs_status_ready(self, ready: bool) -> None:
         if self._obs_status_label is None or self._obs_status_inner is None:
@@ -353,12 +334,6 @@ class ScoreboardApp:
             except (tk.TclError, ValueError):
                 pass
             self._obs_status_poll_after = None
-        if self._obs_status_lift_after is not None:
-            try:
-                self.root.after_cancel(self._obs_status_lift_after)
-            except (tk.TclError, ValueError):
-                pass
-            self._obs_status_lift_after = None
         if self._obs_status_win is not None:
             try:
                 self._obs_status_win.destroy()
@@ -538,8 +513,16 @@ class ScoreboardApp:
             if not self.recording_overlay.can_start_countdown_from_hotkey():
                 return
             self.recording_overlay.start_or_restart_countdown()
+            self._apply_obs_status_ready(True)
             return
         _LOG.warning("Recording overlay not started: %s", msg)
+        self._apply_obs_status_ready(False)
+        if not self.settings.recording_obs_health_fail_closed:
+            if not self.recording_overlay.can_start_countdown_from_hotkey():
+                return
+            _LOG.warning("OBS gate failed; fail-open enabled, starting timer anyway")
+            self.recording_overlay.start_or_restart_countdown()
+            return
         self.replay.show_replay_unavailable_graphic_overlay()
 
     def _on_recording_dismiss_chord(self, _event: tk.Event | None = None) -> None:
@@ -564,7 +547,6 @@ class ScoreboardApp:
         self.black_screen_frame.lift()
         self.black_screen_cover_visible = True
         self.recording_overlay.lift()
-        self._lift_obs_status_window()
 
     def _hide_black_screen_cover(self) -> None:
         if not self.black_screen_cover_visible:
@@ -588,7 +570,6 @@ class ScoreboardApp:
             self._hide_black_screen_cover()
             self.rearm_focus_watchdog_after_transition("black_screen_off")
         self.recording_overlay.lift()
-        self._lift_obs_status_window()
 
     def schedule_claim_focus(self) -> None:
         for jid in self._focus_claim_jobs:
@@ -930,7 +911,6 @@ class ScoreboardApp:
 
         self.canvas.tag_raise(self.overlay_canvas)
         self.recording_overlay.lift()
-        self._lift_obs_status_window()
 
     def update_score(self, team: str, delta: int) -> None:
         if self.black_screen_active:

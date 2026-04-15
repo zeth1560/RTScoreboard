@@ -20,7 +20,7 @@ DEFAULT_SCOREBOARD_LOG_FILE = "logs/scoreboard.log"
 DEFAULT_SCOREBOARD_BG = "Score BG.png"
 DEFAULT_REPLAY_SLATE = "ir slate.png"
 DEFAULT_SLIDESHOW_DIR = r"C:\Users\admin\Dropbox\slideshow"
-DEFAULT_REPLAY_VIDEO_PATH = r"C:\ReplayTrove\INSTANTREPLAY.mp4"
+DEFAULT_REPLAY_VIDEO_PATH = r"C:\ReplayTrove\INSTANTREPLAY.mkv"
 DEFAULT_REPLAY_UNAVAILABLE_IMAGE = "assets/replay_unavailable.png"
 
 IDLE_TIMEOUT_MS = 30 * 60 * 1000
@@ -36,7 +36,7 @@ REPLAY_RETURN_SLATE_HOLD_MS = 350
 REPLAY_TRANSITION_TIMEOUT_MS = 90_000
 # After slate is shown, if video never becomes active this long after launch delay, recover (ms)
 REPLAY_SLATE_STUCK_TIMEOUT_MS = 90_000
-# Refuse mpv if INSTANTREPLAY.mp4 mtime is older than this (seconds). 0 = skip freshness check.
+# Refuse mpv if INSTANTREPLAY file mtime is older than this (seconds). 0 = skip freshness check.
 DEFAULT_REPLAY_FILE_MAX_AGE_SECONDS = 120
 FOCUS_WATCHDOG_INTERVAL_MS = 3000
 # ~12.5 minutes at default interval (250 * 3s); pilot can override via FOCUS_WATCHDOG_TICKS.
@@ -193,17 +193,26 @@ class Settings:
     obs_websocket_port: int = 4455
     obs_websocket_password: str = ""
     obs_websocket_timeout_sec: float = 2.0
-    recording_obs_block_if_main_recording: bool = True
+    recording_obs_block_if_main_recording: bool = False
+    # If True, do not start timer when OBS gate check fails.
+    # If False (default), log warning but still start timer (fail-open).
+    recording_obs_health_fail_closed: bool = False
 
     # OBS restart chord (Q+R+P): Windows only; see scoreboard.obs_restart.
     obs_restart_chord_enabled: bool = False
     obs_executable: str = ""
+    # Startup args for OBS process when restart chord relaunches it.
+    # `--disable-shutdown-check` bypasses safe mode prompt after unclean exits.
+    obs_restart_launch_args: str = "--disable-shutdown-check"
     obs_restart_start_replay_buffer: bool = True
     obs_restart_post_launch_delay_ms: int = 4500
 
     # Bottom-left OBS status strip (WebSocket probe; independent of RECORDING_OBS_HEALTH_CHECK).
     obs_status_indicator_enabled: bool = True
     obs_status_poll_interval_ms: int = 4000
+    # If True, status shows unavailable while main output recording is active.
+    # Default False so "OBS is up" reads as READY for operators.
+    obs_status_require_main_output_idle: bool = False
 
 
 def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
@@ -419,12 +428,17 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         "OBS_WEBSOCKET_TIMEOUT_SEC",
     )
     recording_obs_block_if_main_recording = _env_truthy(
-        g("RECORDING_OBS_BLOCK_IF_MAIN_RECORDING", "1"),
-        True,
+        g("RECORDING_OBS_BLOCK_IF_MAIN_RECORDING", "0"),
+        False,
+    )
+    recording_obs_health_fail_closed = _env_truthy(
+        g("RECORDING_OBS_HEALTH_FAIL_CLOSED", "0"),
+        False,
     )
 
     obs_restart_chord_enabled = _env_truthy(g("OBS_RESTART_CHORD_ENABLED"), False)
     obs_executable = _normalize_path(g("OBS_EXECUTABLE", "") or "")
+    obs_restart_launch_args = (g("OBS_RESTART_LAUNCH_ARGS", "--disable-shutdown-check") or "").strip()
     obs_restart_start_replay_buffer = _env_truthy(
         g("OBS_RESTART_START_REPLAY_BUFFER", "1"),
         True,
@@ -445,6 +459,10 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         4000,
         "OBS_STATUS_POLL_INTERVAL_MS",
         minimum=1500,
+    )
+    obs_status_require_main_output_idle = _env_truthy(
+        g("OBS_STATUS_REQUIRE_MAIN_OUTPUT_IDLE", "0"),
+        False,
     )
 
     focus_watchdog_interval_ms = _parse_positive_int(
@@ -516,12 +534,15 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         obs_websocket_password=obs_websocket_password,
         obs_websocket_timeout_sec=obs_websocket_timeout_sec,
         recording_obs_block_if_main_recording=recording_obs_block_if_main_recording,
+        recording_obs_health_fail_closed=recording_obs_health_fail_closed,
         obs_restart_chord_enabled=obs_restart_chord_enabled,
         obs_executable=obs_executable,
+        obs_restart_launch_args=obs_restart_launch_args,
         obs_restart_start_replay_buffer=obs_restart_start_replay_buffer,
         obs_restart_post_launch_delay_ms=obs_restart_post_launch_delay_ms,
         obs_status_indicator_enabled=obs_status_indicator_enabled,
         obs_status_poll_interval_ms=obs_status_poll_interval_ms,
+        obs_status_require_main_output_idle=obs_status_require_main_output_idle,
         focus_watchdog_interval_ms=focus_watchdog_interval_ms,
         focus_watchdog_ticks=focus_watchdog_ticks,
     )
@@ -598,12 +619,15 @@ def summarize_settings(settings: Settings) -> str:
         f"obs_websocket_port={settings.obs_websocket_port}",
         f"obs_websocket_timeout_sec={settings.obs_websocket_timeout_sec}",
         f"recording_obs_block_if_main_recording={settings.recording_obs_block_if_main_recording}",
+        f"recording_obs_health_fail_closed={settings.recording_obs_health_fail_closed}",
         f"obs_restart_chord_enabled={settings.obs_restart_chord_enabled}",
         f"obs_executable={settings.obs_executable!r}",
+        f"obs_restart_launch_args={settings.obs_restart_launch_args!r}",
         f"obs_restart_start_replay_buffer={settings.obs_restart_start_replay_buffer}",
         f"obs_restart_post_launch_delay_ms={settings.obs_restart_post_launch_delay_ms}",
         f"obs_status_indicator_enabled={settings.obs_status_indicator_enabled}",
         f"obs_status_poll_interval_ms={settings.obs_status_poll_interval_ms}",
+        f"obs_status_require_main_output_idle={settings.obs_status_require_main_output_idle}",
         f"focus_watchdog_ticks={settings.focus_watchdog_ticks}",
         f"focus_watchdog_interval_ms={settings.focus_watchdog_interval_ms}",
     ]

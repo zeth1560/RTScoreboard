@@ -85,8 +85,19 @@ def _obs_websocket_recording_gate_result(
 
 def probe_obs_video_recorder_ready(settings: Settings) -> bool:
     """True if OBS WebSocket is reachable and the same rules as the recording gate pass."""
+    require_idle = settings.obs_status_require_main_output_idle
+    original_block = settings.recording_obs_block_if_main_recording
+    effective_settings = settings
+    if not require_idle and original_block:
+        # Status strip should represent OBS availability, not busy/idle, by default.
+        effective_settings = Settings(
+            **{
+                **settings.__dict__,
+                "recording_obs_block_if_main_recording": False,
+            }
+        )
     ok, _reason = _obs_websocket_recording_gate_result(
-        settings,
+        effective_settings,
         log_connection_failures=False,
     )
     return ok
