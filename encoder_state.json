@@ -1,0 +1,16 @@
+{
+  "state": "shutting_down",
+  "status_text": "Recorder Shutting Down",
+  "encoder_ready": false,
+  "rolling_buffer_applicable": false,
+  "long_recording_active": false,
+  "long_recording_available": true,
+  "restart_pending": false,
+  "degraded": false,
+  "auto_restart_count": 0,
+  "last_error": "recording progress stalled",
+  "long_recording_last_fault": "",
+  "mode": "long_only",
+  "schema_version": 1,
+  "updated_at": "2026-04-16T12:54:13.104145+00:00"
+}
