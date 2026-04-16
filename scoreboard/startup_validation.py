@@ -141,11 +141,17 @@ def log_pilot_diagnostics_summary(
     mpv = resolve_mpv_executable(settings) if settings.replay_enabled else None
     n_img = count_slideshow_images(settings) if settings.slideshow_enabled else 0
 
+    loading_dir = Path(settings.replay_buffer_loading_dir)
+    loading_frames_ok = all(
+        (loading_dir / f"Loading{i:02d}.png").is_file() for i in range(1, 12)
+    )
+
     hotkey_lines = []
     for label, spec in (
         ("record_start", settings.recording_start_hotkey),
         ("record_dismiss", settings.recording_dismiss_hotkey),
         ("black_screen", settings.black_screen_hotkey),
+        ("replay_buffer_loading", settings.replay_buffer_loading_hotkey),
     ):
         p = parse_recording_hotkey_to_tk_bind(spec)
         hotkey_lines.append(f"    {label}: {spec!r} -> {p!r}")
@@ -180,6 +186,14 @@ def log_pilot_diagnostics_summary(
         f"  replay_unavailable_image="
         f"{'OK' if Path(settings.replay_unavailable_image).is_file() else 'MISSING'} "
         f"path={settings.replay_unavailable_image!r}\n"
+        f"  replay_buffer_loading_frames="
+        f"{'OK' if loading_frames_ok else 'MISSING'} "
+        f"dir={settings.replay_buffer_loading_dir!r}\n"
+        f"  encoder_status_overlay="
+        f"{'on' if settings.encoder_status_enabled else 'off'} "
+        f"json={'OK' if Path(settings.encoder_state_path).is_file() else 'absent'} "
+        f"ready_png={'OK' if Path(settings.encoder_status_ready_image).is_file() else 'MISSING'} "
+        f"unavail_png={'OK' if Path(settings.encoder_status_unavailable_image).is_file() else 'MISSING'}\n"
         f"  slideshow_enabled={settings.slideshow_enabled} "
         f"dir_ok={Path(settings.slideshow_dir).is_dir() if settings.slideshow_enabled else 'n/a'} "
         f"image_count={n_img}\n"

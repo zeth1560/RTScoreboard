@@ -33,6 +33,7 @@ class Screensaver:
         lift_recording_overlay: Callable[[], None],
         reclaim_keyboard_focus: Callable[[], None] | None = None,
         on_stopped: Callable[[], None] | None = None,
+        after_overlay_raise: Callable[[], None] | None = None,
     ) -> None:
         self._root = root
         self._canvas = canvas
@@ -44,6 +45,7 @@ class Screensaver:
         self._lift_recording_overlay = lift_recording_overlay
         self._reclaim_keyboard_focus = reclaim_keyboard_focus
         self._on_stopped = on_stopped
+        self._after_overlay_raise = after_overlay_raise
 
         self._active = False
         self._jobs = JobGroup(scheduler)
@@ -99,6 +101,8 @@ class Screensaver:
                 image=self._current_photo,
             )
             self._canvas.tag_raise(self._overlay_canvas_id)
+            if self._after_overlay_raise is not None:
+                self._after_overlay_raise()
             self._lift_recording_overlay()
         if self._on_stopped is not None:
             try:
@@ -248,6 +252,8 @@ class Screensaver:
             image=self._current_photo,
         )
         self._canvas.tag_raise(self._overlay_canvas_id)
+        if self._after_overlay_raise is not None:
+            self._after_overlay_raise()
         self._lift_recording_overlay()
 
         self._jobs.schedule(

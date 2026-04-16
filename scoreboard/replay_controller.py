@@ -55,6 +55,7 @@ class ReplayController:
         before_slate_fade_in: Callable[[], None],
         after_replay_fade_out: Callable[[], None],
         redraw_scores: Callable[[], None],
+        after_overlay_raise: Callable[[], None] | None = None,
     ) -> None:
         self._root = root
         self._settings = settings
@@ -69,6 +70,7 @@ class ReplayController:
         self._before_slate_fade_in = before_slate_fade_in
         self._after_replay_fade_out = after_replay_fade_out
         self._redraw_scores = redraw_scores
+        self._after_overlay_raise = after_overlay_raise
 
         self._phase = ReplayPhase.IDLE
         self._showing_replay = False
@@ -123,6 +125,11 @@ class ReplayController:
         if p != self._phase:
             _LOG.info("Replay phase: %s -> %s", self._phase.name, p.name)
         self._phase = p
+
+    def _raise_fullscreen_overlay(self) -> None:
+        self._canvas.tag_raise(self._overlay_canvas_id)
+        if self._after_overlay_raise is not None:
+            self._after_overlay_raise()
 
     def blocks_idle(self) -> bool:
         return self._showing_replay or self._is_transitioning
@@ -204,6 +211,7 @@ class ReplayController:
             )
         except tk.TclError:
             _LOG.exception("Replay restore: overlay image failed (reason=%s)", reason)
+        self._raise_fullscreen_overlay()
         self._showing_replay = False
         self._replay_video_active = False
         self._is_transitioning = False
@@ -527,6 +535,7 @@ class ReplayController:
             self._overlay_canvas_id,
             image=self._current_overlay_photo,
         )
+        self._raise_fullscreen_overlay()
         self._showing_replay = False
         self._replay_video_active = False
         self._is_transitioning = False
@@ -605,7 +614,7 @@ class ReplayController:
             self._overlay_canvas_id,
             image=self._current_overlay_photo,
         )
-        self._canvas.tag_raise(self._overlay_canvas_id)
+        self._raise_fullscreen_overlay()
         self._lift_recording_overlay()
 
         self._overlay_fade_job = self._scheduler.schedule(
@@ -859,7 +868,7 @@ class ReplayController:
 
     def show_canvas_after_video(self) -> None:
         self._canvas.pack(fill="both", expand=True)
-        self._canvas.tag_raise(self._overlay_canvas_id)
+        self._raise_fullscreen_overlay()
         self.ensure_window_opaque()
 
     def handoff_replay_to_embedded_video(self) -> None:
@@ -947,7 +956,7 @@ class ReplayController:
                     self._overlay_canvas_id,
                     image=self._current_overlay_photo,
                 )
-            self._canvas.tag_raise(self._overlay_canvas_id)
+            self._raise_fullscreen_overlay()
             self._root.update_idletasks()
             # Avoid root.update(): full event-loop processing here can re-enter handlers and
             # contribute to flaky transitions; idletasks is enough for geometry/paint.
@@ -1045,7 +1054,7 @@ class ReplayController:
                     self._overlay_canvas_id,
                     image=self._current_overlay_photo,
                 )
-            self._canvas.tag_raise(self._overlay_canvas_id)
+            self._raise_fullscreen_overlay()
             self._root.update_idletasks()
             # Avoid root.update(): see stop_replay_video_and_return (re-entrancy / timing).
             self._set_phase(ReplayPhase.SLATE_VISIBLE)

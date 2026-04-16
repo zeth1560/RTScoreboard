@@ -22,6 +22,10 @@ DEFAULT_REPLAY_SLATE = "ir slate.png"
 DEFAULT_SLIDESHOW_DIR = r"C:\Users\admin\Dropbox\slideshow"
 DEFAULT_REPLAY_VIDEO_PATH = r"C:\ReplayTrove\INSTANTREPLAY.mkv"
 DEFAULT_REPLAY_UNAVAILABLE_IMAGE = "assets/replay_unavailable.png"
+DEFAULT_REPLAY_BUFFER_LOADING_DIR = "assets/replay_buffer_loading"
+DEFAULT_ENCODER_STATE_FILE = "encoder_state.json"
+DEFAULT_ENCODER_READY_IMAGE = "assets/recorderstatus/ready.png"
+DEFAULT_ENCODER_UNAVAILABLE_IMAGE = "assets/recorderstatus/unavailable.png"
 
 IDLE_TIMEOUT_MS = 30 * 60 * 1000
 SLIDESHOW_INTERVAL_MS = 12 * 1000
@@ -149,6 +153,18 @@ class Settings:
     recording_start_hotkey: str
     recording_dismiss_hotkey: str
     black_screen_hotkey: str
+    replay_buffer_loading_hotkey: str
+    replay_buffer_loading_dir: str
+    replay_buffer_loading_frame_ms: int
+    replay_buffer_loading_margin_px: int
+
+    encoder_status_enabled: bool
+    encoder_state_path: str
+    encoder_status_ready_image: str
+    encoder_status_unavailable_image: str
+    encoder_status_poll_ms: int
+    encoder_status_stale_seconds: int
+    encoder_status_margin_px: int
 
     # Timing (fixed product defaults; not from .env unless we add later)
     idle_timeout_ms: int = IDLE_TIMEOUT_MS
@@ -375,6 +391,79 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         g("RECORDING_DISMISS_HOTKEY", "Ctrl+Alt+m") or "Ctrl+Alt+m"
     ).strip()
     black_screen = (g("BLACK_SCREEN_HOTKEY", "Ctrl+Shift+b") or "Ctrl+Shift+b").strip()
+    replay_buffer_loading_hotkey = (
+        g("REPLAY_BUFFER_LOADING_HOTKEY", "t") or "t"
+    ).strip()
+    replay_buffer_loading_dir = (
+        _normalize_path(
+            g("REPLAY_BUFFER_LOADING_DIR", DEFAULT_REPLAY_BUFFER_LOADING_DIR),
+        )
+        or DEFAULT_REPLAY_BUFFER_LOADING_DIR
+    )
+    _repo_root = Path(__file__).resolve().parent.parent.parent
+    _rbd = Path(replay_buffer_loading_dir)
+    if not _rbd.is_absolute():
+        replay_buffer_loading_dir = str((_repo_root / _rbd).resolve())
+    replay_buffer_loading_frame_ms = _parse_positive_int(
+        g("REPLAY_BUFFER_LOADING_FRAME_MS", "3000"),
+        3000,
+        "REPLAY_BUFFER_LOADING_FRAME_MS",
+        minimum=100,
+    )
+    replay_buffer_loading_margin_px = _parse_positive_int(
+        g("REPLAY_BUFFER_LOADING_MARGIN_PX", "24"),
+        24,
+        "REPLAY_BUFFER_LOADING_MARGIN_PX",
+        minimum=0,
+    )
+
+    encoder_status_enabled = _env_truthy(g("ENCODER_STATUS_ENABLED"), True)
+    encoder_state_path = (
+        _normalize_path(g("ENCODER_STATE_PATH", DEFAULT_ENCODER_STATE_FILE))
+        or DEFAULT_ENCODER_STATE_FILE
+    )
+    encoder_status_ready_image = (
+        _normalize_path(
+            g("ENCODER_STATUS_READY_IMAGE", DEFAULT_ENCODER_READY_IMAGE),
+        )
+        or DEFAULT_ENCODER_READY_IMAGE
+    )
+    encoder_status_unavailable_image = (
+        _normalize_path(
+            g(
+                "ENCODER_STATUS_UNAVAILABLE_IMAGE",
+                DEFAULT_ENCODER_UNAVAILABLE_IMAGE,
+            ),
+        )
+        or DEFAULT_ENCODER_UNAVAILABLE_IMAGE
+    )
+    _esp_state = Path(encoder_state_path)
+    _esp_ready = Path(encoder_status_ready_image)
+    _esp_unavail = Path(encoder_status_unavailable_image)
+    if not _esp_state.is_absolute():
+        encoder_state_path = str((_repo_root / _esp_state).resolve())
+    if not _esp_ready.is_absolute():
+        encoder_status_ready_image = str((_repo_root / _esp_ready).resolve())
+    if not _esp_unavail.is_absolute():
+        encoder_status_unavailable_image = str((_repo_root / _esp_unavail).resolve())
+    encoder_status_poll_ms = _parse_positive_int(
+        g("ENCODER_STATUS_POLL_MS", "2000"),
+        2000,
+        "ENCODER_STATUS_POLL_MS",
+        minimum=500,
+    )
+    encoder_status_stale_seconds = _parse_positive_int(
+        g("ENCODER_STATUS_STALE_SECONDS", "45"),
+        45,
+        "ENCODER_STATUS_STALE_SECONDS",
+        minimum=5,
+    )
+    encoder_status_margin_px = _parse_positive_int(
+        g("ENCODER_STATUS_MARGIN_PX", "24"),
+        24,
+        "ENCODER_STATUS_MARGIN_PX",
+        minimum=0,
+    )
 
     replay_enabled = _env_truthy(g("REPLAY_ENABLED"), True)
     slideshow_enabled = _env_truthy(g("SLIDESHOW_ENABLED"), True)
@@ -507,6 +596,17 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         recording_start_hotkey=recording_start,
         recording_dismiss_hotkey=recording_dismiss,
         black_screen_hotkey=black_screen,
+        replay_buffer_loading_hotkey=replay_buffer_loading_hotkey,
+        replay_buffer_loading_dir=replay_buffer_loading_dir,
+        replay_buffer_loading_frame_ms=replay_buffer_loading_frame_ms,
+        replay_buffer_loading_margin_px=replay_buffer_loading_margin_px,
+        encoder_status_enabled=encoder_status_enabled,
+        encoder_state_path=encoder_state_path,
+        encoder_status_ready_image=encoder_status_ready_image,
+        encoder_status_unavailable_image=encoder_status_unavailable_image,
+        encoder_status_poll_ms=encoder_status_poll_ms,
+        encoder_status_stale_seconds=encoder_status_stale_seconds,
+        encoder_status_margin_px=encoder_status_margin_px,
         recording_session_end_info_ms=recording_session_end_info_ms,
         recording_session_end_message=recording_session_end_message,
         recording_overlay_width=recording_overlay_width,
@@ -568,6 +668,11 @@ def _validate_hotkey_specs(settings: Settings) -> None:
         ("RECORDING_START_HOTKEY", settings.recording_start_hotkey, "Ctrl+Shift+g"),
         ("RECORDING_DISMISS_HOTKEY", settings.recording_dismiss_hotkey, "Ctrl+Alt+m"),
         ("BLACK_SCREEN_HOTKEY", settings.black_screen_hotkey, "Ctrl+Shift+b"),
+        (
+            "REPLAY_BUFFER_LOADING_HOTKEY",
+            settings.replay_buffer_loading_hotkey,
+            "t",
+        ),
     ):
         if parse_recording_hotkey_to_tk_bind(spec) is None:
             _LOG.warning(
@@ -604,6 +709,17 @@ def summarize_settings(settings: Settings) -> str:
         f"recording_start_hotkey={settings.recording_start_hotkey!r}",
         f"recording_dismiss_hotkey={settings.recording_dismiss_hotkey!r}",
         f"black_screen_hotkey={settings.black_screen_hotkey!r}",
+        f"replay_buffer_loading_hotkey={settings.replay_buffer_loading_hotkey!r}",
+        f"replay_buffer_loading_dir={settings.replay_buffer_loading_dir!r}",
+        f"replay_buffer_loading_frame_ms={settings.replay_buffer_loading_frame_ms}",
+        f"replay_buffer_loading_margin_px={settings.replay_buffer_loading_margin_px}",
+        f"encoder_status_enabled={settings.encoder_status_enabled}",
+        f"encoder_state_path={settings.encoder_state_path!r}",
+        f"encoder_status_ready_image={settings.encoder_status_ready_image!r}",
+        f"encoder_status_unavailable_image={settings.encoder_status_unavailable_image!r}",
+        f"encoder_status_poll_ms={settings.encoder_status_poll_ms}",
+        f"encoder_status_stale_seconds={settings.encoder_status_stale_seconds}",
+        f"encoder_status_margin_px={settings.encoder_status_margin_px}",
         f"idle_timeout_ms={settings.idle_timeout_ms}",
         f"slideshow_interval_ms={settings.slideshow_interval_ms}",
         f"replay_enabled={settings.replay_enabled}",

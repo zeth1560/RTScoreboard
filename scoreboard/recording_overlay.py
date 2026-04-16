@@ -35,10 +35,12 @@ class RecordingOverlay:
         screen_width: int,
         screen_height: int,
         on_dismiss_chord: Callable[[tk.Event], None],
+        on_ui_visibility: Callable[[bool], None] | None = None,
     ) -> None:
         self._root = root
         self._settings = settings
         self._on_dismiss_chord = on_dismiss_chord
+        self._on_ui_visibility = on_ui_visibility
         self._scheduler = scheduler
         self._screen_width = screen_width
         self._screen_height = screen_height
@@ -68,6 +70,14 @@ class RecordingOverlay:
         self._light_shape_id: int | None = None
         self._header_label: tk.Label | None = None
         self._main_label: tk.Label | None = None
+
+    def _emit_ui_visibility(self, visible: bool) -> None:
+        if self._on_ui_visibility is None:
+            return
+        try:
+            self._on_ui_visibility(visible)
+        except Exception:
+            _LOG.exception("Recording overlay on_ui_visibility callback failed")
 
     @property
     def state(self) -> RecordingOverlayState:
@@ -443,6 +453,7 @@ class RecordingOverlay:
                 _LOG.debug("Recording overlay withdraw failed", exc_info=True)
         self._last_applied_geometry = None
         _LOG.info("Recording overlay: hidden")
+        self._emit_ui_visibility(False)
 
     def lift(self) -> None:
         """Keep overlay stacked above content when visible. No-op when dismissed (withdrawn)."""
@@ -513,6 +524,7 @@ class RecordingOverlay:
             _LOG.debug("Recording overlay deiconify failed", exc_info=True)
         self.lift()
         _LOG.info("Recording overlay: countdown started (max %s min)", self._settings.recording_max_minutes)
+        self._emit_ui_visibility(True)
         self._schedule_tick()
         if (not use_graphic) or self._canvas_blink_pair_enabled():
             self._schedule_blink()
@@ -753,6 +765,7 @@ class RecordingOverlay:
         self._body_inner = None
         self._text_col = None
         self._state = RecordingOverlayState.HIDDEN
+        self._emit_ui_visibility(False)
 
     def on_screen_resize(self, screen_width: int, screen_height: int) -> None:
         self._screen_width = screen_width

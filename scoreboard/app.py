@@ -15,9 +15,11 @@ from PIL import Image, ImageTk
 from scoreboard.config.settings import Settings, load_settings
 from scoreboard.hotkeys import bind_recording_hotkey, bind_recording_hotkey_global
 from scoreboard.obs_health import check_obs_recording_gate, probe_obs_video_recorder_ready
+from scoreboard.encoder_status_overlay import EncoderStatusOverlay
 from scoreboard.persistence.score_store import load_scores, save_scores
 from scoreboard.platform.win32 import win32_force_foreground, win32_synthetic_click_window_center
 from scoreboard.recording_overlay import RecordingOverlay
+from scoreboard.replay_buffer_loading_overlay import ReplayBufferLoadingOverlay
 from scoreboard.replay_controller import ReplayController
 from scoreboard.scheduler import AfterScheduler
 from scoreboard.screensaver import Screensaver
@@ -125,6 +127,16 @@ class ScoreboardApp:
         self.font_size = int(self.screen_height * 0.45)
         self.squeeze_x = 0.88
 
+        self._encoder_status_overlay = EncoderStatusOverlay(
+            root,
+            self.settings,
+            self.scheduler,
+            self.canvas,
+            self.overlay_canvas,
+            self.screen_width,
+            self.screen_height,
+        )
+
         self.recording_overlay = RecordingOverlay(
             root,
             self.settings,
@@ -132,6 +144,17 @@ class ScoreboardApp:
             self.screen_width,
             self.screen_height,
             on_dismiss_chord=self._on_recording_dismiss_chord,
+            on_ui_visibility=self._encoder_status_overlay.set_recording_overlay_covers,
+        )
+
+        self._replay_buffer_loading = ReplayBufferLoadingOverlay(
+            root,
+            self.settings,
+            self.scheduler,
+            self.canvas,
+            self.overlay_canvas,
+            self.screen_width,
+            self.screen_height,
         )
 
         self.screensaver = Screensaver(
@@ -149,6 +172,7 @@ class ScoreboardApp:
             on_stopped=lambda: self.rearm_focus_watchdog_after_transition(
                 "screensaver_stopped",
             ),
+            after_overlay_raise=self._sync_canvas_aux_overlays,
         )
         self.screensaver.set_transparent_overlay_photo(self.overlay_photo)
 
@@ -166,11 +190,15 @@ class ScoreboardApp:
             before_slate_fade_in=self._hide_black_screen_cover,
             after_replay_fade_out=self._after_replay_fade_out,
             redraw_scores=self.draw_scores,
+            after_overlay_raise=self._sync_canvas_aux_overlays,
         )
 
         self.draw_scores()
 
         self.canvas.tag_raise(self.overlay_canvas)
+        self._sync_canvas_aux_overlays()
+
+        self._encoder_status_overlay.start()
 
         self._setup_obs_status_indicator()
         self._bind_keys()
@@ -387,6 +415,12 @@ class ScoreboardApp:
             self.settings.black_screen_hotkey,
             "Ctrl+Shift+b",
             lambda e: self.on_streamdeck_input(self.toggle_black_screen),
+        )
+        bind_recording_hotkey_global(
+            root,
+            self.settings.replay_buffer_loading_hotkey,
+            "t",
+            lambda e: self.on_streamdeck_input(self.start_replay_buffer_loading_overlay),
         )
         root.bind_all("<Escape>", lambda e: self.root.after(0, self.close_app))
 
@@ -781,6 +815,8 @@ class ScoreboardApp:
         self._release_topmost_job = None
 
         self.screensaver.teardown()
+        self._encoder_status_overlay.teardown()
+        self._replay_buffer_loading.teardown()
         self.replay.teardown()
         self.cancel_focus_watchdog()
         self.scheduler.cancel(self._idle_check_job)
@@ -899,6 +935,11 @@ class ScoreboardApp:
 
         return items
 
+    def _sync_canvas_aux_overlays(self) -> None:
+        """Keep encoder + replay-buffer canvas strips above the transparent overlay."""
+        self._encoder_status_overlay.sync_canvas_stack()
+        self._replay_buffer_loading.sync_canvas_stack()
+
     def draw_scores(self) -> None:
         self.canvas.delete("score")
 
@@ -910,6 +951,7 @@ class ScoreboardApp:
         )
 
         self.canvas.tag_raise(self.overlay_canvas)
+        self._sync_canvas_aux_overlays()
         self.recording_overlay.lift()
 
     def update_score(self, team: str, delta: int) -> None:
@@ -949,6 +991,9 @@ class ScoreboardApp:
             return
         self.screensaver.stop()
         self.replay.toggle_replay()
+
+    def start_replay_buffer_loading_overlay(self) -> None:
+        self._replay_buffer_loading.start_sequence()
 
     def ensure_window_opaque(self) -> None:
         try:

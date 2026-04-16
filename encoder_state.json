@@ -8,9 +8,9 @@
   "restart_pending": false,
   "degraded": false,
   "auto_restart_count": 0,
-  "last_error": "recording progress stalled",
+  "last_error": "\u2014",
   "long_recording_last_fault": "",
   "mode": "long_only",
   "schema_version": 1,
-  "updated_at": "2026-04-16T12:54:13.104145+00:00"
+  "updated_at": "2026-04-16T18:56:58.286355+00:00"
 }
