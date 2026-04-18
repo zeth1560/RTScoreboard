@@ -232,7 +232,13 @@ class ScoreboardApp:
             "screensaver_active": self.screensaver.is_active(),
             "updated_at": utc_now_iso(),
         }
-        write_launcher_status_json(path, payload)
+        if write_launcher_status_json(path, payload):
+            _LOG.info(
+                "Launcher status: wrote %s (scoreboard_running=%s screensaver_active=%s)",
+                path,
+                payload["scoreboard_running"],
+                payload["screensaver_active"],
+            )
 
     def _app_is_alive(self) -> bool:
         """False while shutting down — used by AfterScheduler to drop queued work safely.

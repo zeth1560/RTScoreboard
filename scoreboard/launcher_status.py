@@ -17,14 +17,14 @@ def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def write_launcher_status_json(path: str | Path, payload: dict[str, Any]) -> None:
-    """Atomically write JSON so readers never see a partial file."""
+def write_launcher_status_json(path: str | Path, payload: dict[str, Any]) -> bool:
+    """Atomically write JSON so readers never see a partial file. Returns True if the file was replaced."""
     p = Path(path)
     try:
         p.parent.mkdir(parents=True, exist_ok=True)
     except OSError:
         _LOG.warning("Launcher status: could not create directory %s", p.parent, exc_info=True)
-        return
+        return False
 
     body = json.dumps(payload, indent=2, sort_keys=True) + "\n"
     fd: int | None = None
@@ -40,8 +40,10 @@ def write_launcher_status_json(path: str | Path, payload: dict[str, Any]) -> Non
             f.write(body)
         os.replace(tmp_name, p)
         tmp_name = None
+        return True
     except OSError:
         _LOG.warning("Launcher status: write failed for %s", p, exc_info=True)
+        return False
     finally:
         if fd is not None:
             try:

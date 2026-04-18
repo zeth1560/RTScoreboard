@@ -197,6 +197,8 @@ def log_pilot_diagnostics_summary(
         f"  slideshow_enabled={settings.slideshow_enabled} "
         f"dir_ok={Path(settings.slideshow_dir).is_dir() if settings.slideshow_enabled else 'n/a'} "
         f"image_count={n_img}\n"
+        f"  launcher_status={'on' if settings.launcher_status_enabled else 'off'} "
+        f"path={settings.launcher_status_json_path!r}\n"
         f"  recording_max_minutes={settings.recording_max_minutes} "
         f"idle_timeout_min={settings.idle_timeout_ms // 60000}\n"
         f"  heartbeat_interval_minutes={settings.heartbeat_interval_minutes} "
