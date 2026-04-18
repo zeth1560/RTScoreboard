@@ -28,6 +28,7 @@ DEFAULT_ENCODER_STATE_FILE = "encoder_state.json"
 DEFAULT_ENCODER_READY_IMAGE = "assets/recorderstatus/ready.png"
 DEFAULT_ENCODER_UNAVAILABLE_IMAGE = "assets/recorderstatus/unavailable.png"
 DEFAULT_LAUNCHER_RESTART_OBS_SCRIPT = r"C:\ReplayTrove\launcher\restart_obs.ps1"
+DEFAULT_LAUNCHER_STATUS_JSON_PATH = r"C:\ReplayTrove\launcher\scoreboard_status.json"
 
 IDLE_TIMEOUT_MS = 30 * 60 * 1000
 SLIDESHOW_INTERVAL_MS = 12 * 1000
@@ -273,6 +274,10 @@ class Settings:
     mpv_obs_force_software_decode: bool = False
     # When mpv_obs_friendly: fast | balanced | hq (scaling / mpv builtin profiles).
     mpv_replay_quality: str = "fast"
+
+    # JSON for external launcher (screensaver_active, scoreboard_running).
+    launcher_status_enabled: bool = True
+    launcher_status_json_path: str = DEFAULT_LAUNCHER_STATUS_JSON_PATH
 
 
 def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
@@ -551,6 +556,23 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         minimum=250,
     )
 
+    launcher_status_enabled = _env_truthy(
+        g("SCOREBOARD_LAUNCHER_STATUS_ENABLED"),
+        True,
+    )
+    _launcher_status_path = (
+        g(
+            "SCOREBOARD_LAUNCHER_STATUS_PATH",
+            DEFAULT_LAUNCHER_STATUS_JSON_PATH,
+        )
+        or DEFAULT_LAUNCHER_STATUS_JSON_PATH
+    ).strip()
+    _lsp = Path(_launcher_status_path)
+    if not _lsp.is_absolute():
+        launcher_status_json_path = str((_repo_root / _lsp).resolve())
+    else:
+        launcher_status_json_path = str(_lsp)
+
     replay_enabled = _env_truthy(g("REPLAY_ENABLED"), True)
     slideshow_enabled = _env_truthy(g("SLIDESHOW_ENABLED"), True)
     scoreboard_debug = _env_truthy(g("SCOREBOARD_DEBUG"), False)
@@ -726,6 +748,8 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         encoder_status_margin_px=encoder_status_margin_px,
         recording_encoder_sync_enabled=recording_encoder_sync_enabled,
         recording_encoder_poll_ms=recording_encoder_poll_ms,
+        launcher_status_enabled=launcher_status_enabled,
+        launcher_status_json_path=launcher_status_json_path,
         recording_session_end_info_ms=recording_session_end_info_ms,
         recording_session_end_message=recording_session_end_message,
         recording_overlay_width=recording_overlay_width,
@@ -860,6 +884,8 @@ def summarize_settings(settings: Settings) -> str:
         f"encoder_status_margin_px={settings.encoder_status_margin_px}",
         f"recording_encoder_sync_enabled={settings.recording_encoder_sync_enabled}",
         f"recording_encoder_poll_ms={settings.recording_encoder_poll_ms}",
+        f"launcher_status_enabled={settings.launcher_status_enabled}",
+        f"launcher_status_json_path={settings.launcher_status_json_path!r}",
         f"idle_timeout_ms={settings.idle_timeout_ms}",
         f"slideshow_interval_ms={settings.slideshow_interval_ms}",
         f"replay_enabled={settings.replay_enabled}",

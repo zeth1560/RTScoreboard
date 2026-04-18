@@ -19,6 +19,7 @@ from scoreboard.encoder_status_overlay import EncoderStatusOverlay
 from scoreboard.persistence.score_store import load_scores, save_scores
 from scoreboard.platform.win32 import win32_force_foreground, win32_synthetic_click_window_center
 from scoreboard.encoder_recording_sync import load_encoder_recording_snapshot
+from scoreboard.launcher_status import utc_now_iso, write_launcher_status_json
 from scoreboard.recording_overlay import RecordingOverlay, RecordingOverlayState
 from scoreboard.replay_buffer_loading_overlay import ReplayBufferLoadingOverlay
 from scoreboard.replay_controller import ReplayController
@@ -179,6 +180,7 @@ class ScoreboardApp:
                 "screensaver_stopped",
             ),
             after_overlay_raise=self._sync_canvas_aux_overlays,
+            on_active_changed=lambda _active: self._publish_launcher_status(),
         )
         self.screensaver.set_transparent_overlay_photo(self.overlay_photo)
 
@@ -215,7 +217,22 @@ class ScoreboardApp:
         self._schedule_heartbeat()
         self._apply_hidden_cursor()
         self._schedule_encoder_recording_poll()
+        self._publish_launcher_status()
         self._log_startup_readiness()
+
+    def _publish_launcher_status(self) -> None:
+        """Emit JSON for ReplayTrove launcher (screensaver + process liveness)."""
+        if not self.settings.launcher_status_enabled:
+            return
+        path = self.settings.launcher_status_json_path
+        if not path or not str(path).strip():
+            return
+        payload = {
+            "scoreboard_running": not self._closing,
+            "screensaver_active": self.screensaver.is_active(),
+            "updated_at": utc_now_iso(),
+        }
+        write_launcher_status_json(path, payload)
 
     def _app_is_alive(self) -> bool:
         """False while shutting down — used by AfterScheduler to drop queued work safely.
@@ -943,6 +960,7 @@ class ScoreboardApp:
         self.scheduler.cancel(self._heartbeat_job)
         self._heartbeat_job = None
         self.scheduler.cancel_all_tracked()
+        self._publish_launcher_status()
         self.root.destroy()
 
     def schedule_idle_check(self) -> None:

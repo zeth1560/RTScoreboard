@@ -5,7 +5,7 @@
   "allow_record_timer_overlay": true,
   "rolling_buffer_applicable": false,
   "long_recording_active": false,
-  "long_recording_session_seq": 1,
+  "long_recording_session_seq": 0,
   "long_recording_started_at": null,
   "long_recording_available": true,
   "restart_pending": false,
@@ -15,5 +15,5 @@
   "long_recording_last_fault": "",
   "mode": "long_only",
   "schema_version": 1,
-  "updated_at": "2026-04-18T06:03:06.226676+00:00"
+  "updated_at": "2026-04-18T14:06:45.599303+00:00"
 }

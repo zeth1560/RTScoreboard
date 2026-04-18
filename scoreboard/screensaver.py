@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import random
-from typing import Callable
+from collections.abc import Callable
 
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -34,6 +34,7 @@ class Screensaver:
         reclaim_keyboard_focus: Callable[[], None] | None = None,
         on_stopped: Callable[[], None] | None = None,
         after_overlay_raise: Callable[[], None] | None = None,
+        on_active_changed: Callable[[bool], None] | None = None,
     ) -> None:
         self._root = root
         self._canvas = canvas
@@ -46,6 +47,7 @@ class Screensaver:
         self._reclaim_keyboard_focus = reclaim_keyboard_focus
         self._on_stopped = on_stopped
         self._after_overlay_raise = after_overlay_raise
+        self._on_active_changed = on_active_changed
 
         self._active = False
         self._jobs = JobGroup(scheduler)
@@ -109,6 +111,7 @@ class Screensaver:
                 self._on_stopped()
             except Exception:
                 _LOG.exception("Screensaver: on_stopped callback failed")
+        self._notify_active_changed(False)
 
     def start(self) -> None:
         if not self._settings.slideshow_enabled:
@@ -118,6 +121,7 @@ class Screensaver:
             return
         _LOG.info("Screensaver: starting")
         self._active = True
+        self._notify_active_changed(True)
         self._current_frame = None
         if self._reclaim_keyboard_focus is not None:
             self._focus_reclaim_tick()
@@ -272,8 +276,19 @@ class Screensaver:
             name="screensaver_next_slide",
         )
 
+    def _notify_active_changed(self, active: bool) -> None:
+        if self._on_active_changed is None:
+            return
+        try:
+            self._on_active_changed(active)
+        except Exception:
+            _LOG.exception("Screensaver: on_active_changed failed")
+
     def teardown(self) -> None:
+        was = self._active
         self._clear_jobs()
         self._active = False
         self._fade_frames_hold.clear()
         self._last_slideshow_path = None
+        if was:
+            self._notify_active_changed(False)
