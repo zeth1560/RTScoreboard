@@ -9,6 +9,9 @@ from typing import Any
 
 _LOG = logging.getLogger(__name__)
 
+# Optional: ``lambda: True`` while the UI should accept scheduled callbacks.
+AliveCheck = Callable[[], bool]
+
 _DEFAULT_BG_RESILIENCE_MAX = 5
 
 
@@ -21,10 +24,12 @@ class AfterScheduler:
         logger: logging.Logger | None = None,
         *,
         debug_schedule: bool = False,
+        alive_check: AliveCheck | None = None,
     ) -> None:
         self._root = root
         self._log = logger or _LOG
         self._debug_schedule = debug_schedule
+        self._alive_check = alive_check
         self._jobs: set[str] = set()
         self._job_names: dict[str, str] = {}
         self._resilience_failures: dict[str, int] = {}
@@ -63,6 +68,10 @@ class AfterScheduler:
         def wrapper() -> None:
             self._jobs.discard(jid)
             self._job_names.pop(jid, None)
+            if self._alive_check is not None and not self._alive_check():
+                if self._debug_schedule and label:
+                    self._log.debug("after skipped (app not alive) name=%r", label)
+                return
             if self._debug_schedule and label:
                 self._log.debug("after fired name=%r", label)
             if background_resilience and label in self._resilience_disabled:

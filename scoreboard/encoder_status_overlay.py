@@ -18,6 +18,25 @@ _LOG = logging.getLogger(__name__)
 _POLL_JOB = "encoder_status_poll"
 _CANVAS_TAG = "encoder_status"
 
+# States that mean the appliance is down regardless of other flags (encoder schema v1).
+_UNAVAILABLE_STATES = frozenset(
+    {
+        "shutting_down",
+        "error",
+        "fatal",
+        "stopped",
+        "unavailable",
+        "offline",
+        "crashed",
+    }
+)
+_LEGACY_READY_STATES = frozenset({"ready", "recording", "idle"})
+_BOOL_READY_KEYS = (
+    "encoder_ready",
+    "long_recording_available",
+    "rolling_buffer_applicable",
+)
+
 
 class EncoderStatusOverlay:
     def __init__(
@@ -131,8 +150,7 @@ class EncoderStatusOverlay:
         data = json.loads(raw)
         if _is_payload_stale(data.get("updated_at"), self._settings.encoder_status_stale_seconds):
             return False
-        state = str(data.get("state", "")).strip().lower()
-        return state in ("ready", "recording")
+        return _payload_indicates_ready(data)
 
     def _apply_if_changed(self, want_ready: bool) -> None:
         if self._item_a is not None and self._last_shown_ready == want_ready:
@@ -232,6 +250,20 @@ def _path_to_rgb_photo(path: str) -> ImageTk.PhotoImage | None:
         return ImageTk.PhotoImage(rgb)
     except OSError:
         return None
+
+
+def _payload_indicates_ready(data: dict) -> bool:
+    """Match encoder_state.json schema v1: booleans + state, with terminal states overriding."""
+    state = str(data.get("state", "")).strip().lower()
+    if state in _UNAVAILABLE_STATES:
+        return False
+    present_flags = [data[k] for k in _BOOL_READY_KEYS if k in data]
+    if present_flags:
+        if any(v is True for v in present_flags if isinstance(v, bool)):
+            return True
+        if all(isinstance(v, bool) for v in present_flags):
+            return False
+    return state in _LEGACY_READY_STATES
 
 
 def _is_payload_stale(updated_at: object, stale_seconds: int) -> bool:

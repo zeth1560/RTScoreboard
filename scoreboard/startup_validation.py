@@ -202,6 +202,8 @@ def log_pilot_diagnostics_summary(
         f"  heartbeat_interval_minutes={settings.heartbeat_interval_minutes} "
         f"(0=off)\n"
         f"  recording_obs_health_check={settings.recording_obs_health_check} "
+        f"replay_obs_broadcast_on_unavailable={settings.replay_obs_broadcast_on_unavailable} "
+        f"replay_launcher_restart_obs={settings.replay_launcher_restart_obs_on_unavailable} "
         f"ws={settings.obs_websocket_host!r}:{settings.obs_websocket_port} "
         f"timeout_sec={settings.obs_websocket_timeout_sec} {obs_dep_note}\n"
         f"  obs_restart_chord={obs_restart_note}\n"

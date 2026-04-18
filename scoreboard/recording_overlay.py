@@ -662,7 +662,11 @@ class RecordingOverlay:
 
         self.lift()
         _LOG.info("Recording overlay: max length reached; showing ended message")
-        self._root.after(50, self._grab_focus_for_dismiss_hotkey)
+        self._scheduler.schedule(
+            50,
+            self._grab_focus_for_dismiss_hotkey,
+            name="recording_ended_focus_grab",
+        )
 
         self._ended_dismiss_job = self._scheduler.schedule(
             self._ended_hold_ms(),
@@ -729,6 +733,12 @@ class RecordingOverlay:
 
     def dismiss_ended_message(self) -> None:
         if self._state != RecordingOverlayState.ENDED_MESSAGE:
+            return
+        self._hide_completely()
+
+    def dismiss_from_encoder_idle(self) -> None:
+        """Encoder reports idle during countdown — hide overlay without session-end slate."""
+        if self._state != RecordingOverlayState.COUNTING:
             return
         self._hide_completely()
 

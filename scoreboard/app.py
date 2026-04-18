@@ -18,7 +18,8 @@ from scoreboard.obs_health import check_obs_recording_gate, probe_obs_video_reco
 from scoreboard.encoder_status_overlay import EncoderStatusOverlay
 from scoreboard.persistence.score_store import load_scores, save_scores
 from scoreboard.platform.win32 import win32_force_foreground, win32_synthetic_click_window_center
-from scoreboard.recording_overlay import RecordingOverlay
+from scoreboard.encoder_recording_sync import load_encoder_recording_snapshot
+from scoreboard.recording_overlay import RecordingOverlay, RecordingOverlayState
 from scoreboard.replay_buffer_loading_overlay import ReplayBufferLoadingOverlay
 from scoreboard.replay_controller import ReplayController
 from scoreboard.scheduler import AfterScheduler
@@ -39,10 +40,12 @@ class ScoreboardApp:
     def __init__(self, root: tk.Tk, settings: Settings | None = None) -> None:
         self.root = root
         self.settings = settings or load_settings()
+        self._closing = False
         self.scheduler = AfterScheduler(
             root,
             logger=_LOG.getChild("scheduler"),
             debug_schedule=self.settings.scoreboard_debug,
+            alive_check=self._app_is_alive,
         )
 
         state_path = Path(self.settings.state_file)
@@ -61,13 +64,16 @@ class ScoreboardApp:
         self._heartbeat_job: str | None = None
         self._recording_obs_check_in_flight = False
         self._obs_chord_pressed: set[str] = set()
-        self._obs_chord_after_id: str | None = None
+        self._obs_chord_job: str | None = None
         self._obs_restart_last_mono = 0.0
         self._obs_status_win: tk.Toplevel | None = None
         self._obs_status_inner: tk.Frame | None = None
         self._obs_status_label: tk.Label | None = None
         self._obs_status_poll_after: str | None = None
         self._obs_status_poll_busy = False
+        self._encoder_recording_poll_job: str | None = None
+        self._encoder_recording_prev_seq: int | None = None
+        self._encoder_sync_believes_recording = False
         self.focus_watchdog_ticks_left = 0
         self._focus_watchdog_exhausted_logged = False
         self.last_input_ms = int(time.monotonic() * 1000)
@@ -208,23 +214,91 @@ class ScoreboardApp:
         self.schedule_synthetic_focus_clicks()
         self._schedule_heartbeat()
         self._apply_hidden_cursor()
+        self._schedule_encoder_recording_poll()
         self._log_startup_readiness()
+
+    def _app_is_alive(self) -> bool:
+        """False while shutting down — used by AfterScheduler to drop queued work safely.
+
+        Intentionally does **not** use ``winfo_exists()`` on the root: on some Windows/fullscreen
+        setups, that call can return 0 intermittently while the UI is healthy. If the scheduler
+        skips a callback, recurring jobs like the recording countdown never reschedule and appear
+        stuck (or never start, e.g. OBS gate completion never runs).
+        """
+        return not self._closing
 
     def _log_startup_readiness(self) -> None:
         log_path = (self.settings.scoreboard_log_file or "").strip()
         _LOG.info(
             "Startup readiness: streamdeck_hotkeys=deferred replay_enabled=%s "
             "recording_overlay=ok scheduler=ok synthetic_focus_click=%s "
-            "obs_recording_gate=%s obs_restart_chord=%s obs_status_indicator=%s log_file=%s",
+            "obs_recording_gate=%s encoder_recording_sync=%s obs_restart_chord=%s "
+            "obs_status_indicator=%s log_file=%s",
             self.settings.replay_enabled,
             self.settings.synthetic_focus_click,
             "on"
             if self.settings.recording_obs_health_check
             else "off",
+            "on" if self.settings.recording_encoder_sync_enabled else "off",
             "on" if self.settings.obs_restart_chord_enabled else "off",
             "on" if self.settings.obs_status_indicator_enabled else "off",
             repr(log_path) if log_path else "(stderr only)",
         )
+
+    def _schedule_encoder_recording_poll(self) -> None:
+        self.scheduler.cancel(self._encoder_recording_poll_job)
+        self._encoder_recording_poll_job = None
+        if not self.settings.recording_encoder_sync_enabled:
+            return
+        self._encoder_recording_poll_job = self.scheduler.schedule(
+            self.settings.recording_encoder_poll_ms,
+            self._encoder_recording_poll_tick,
+            name="encoder_recording_poll",
+        )
+
+    def _encoder_recording_poll_tick(self) -> None:
+        self._encoder_recording_poll_job = None
+        if not self.settings.recording_encoder_sync_enabled or self._closing:
+            return
+
+        path = Path(self.settings.encoder_state_path)
+        snap = load_encoder_recording_snapshot(
+            path,
+            self.settings.encoder_status_stale_seconds,
+            self._encoder_recording_prev_seq,
+        )
+
+        if not snap.usable:
+            self._schedule_encoder_recording_poll()
+            return
+
+        if snap.session_seq is not None:
+            self._encoder_recording_prev_seq = snap.session_seq
+
+        capturing = snap.capturing
+        was_enc = self._encoder_sync_believes_recording
+
+        if capturing and not was_enc:
+            ro = self.recording_overlay
+            if ro.state != RecordingOverlayState.COUNTING:
+                if ro.can_start_countdown_from_hotkey():
+                    _LOG.info(
+                        "Recording overlay: countdown started (encoder capture active; %s)",
+                        path,
+                    )
+                    ro.start_or_restart_countdown()
+            self._encoder_sync_believes_recording = True
+        elif not capturing and was_enc:
+            _LOG.info(
+                "Recording overlay: encoder idle — hiding in-progress timer if shown (%s)",
+                path,
+            )
+            self.recording_overlay.dismiss_from_encoder_idle()
+            self._encoder_sync_believes_recording = False
+        else:
+            self._encoder_sync_believes_recording = capturing
+
+        self._schedule_encoder_recording_poll()
 
     def _apply_hidden_cursor(self) -> None:
         """Hide the mouse pointer over the scoreboard (kiosk-style)."""
@@ -300,7 +374,11 @@ class ScoreboardApp:
         self._obs_status_inner = inner
         self._obs_status_label = lbl
 
-        self._obs_status_poll_after = self.root.after(300, self._obs_status_poll_tick)
+        self._obs_status_poll_after = self.scheduler.schedule(
+            300,
+            self._obs_status_poll_tick,
+            name="obs_status_poll_initial",
+        )
 
     def _apply_obs_status_ready(self, ready: bool) -> None:
         if self._obs_status_label is None or self._obs_status_inner is None:
@@ -324,7 +402,11 @@ class ScoreboardApp:
         except Exception:
             _LOG.debug("OBS status poll failed", exc_info=True)
             ready = False
-        self.root.after(0, lambda r=ready: self._obs_status_poll_done(r))
+        self.scheduler.schedule(
+            0,
+            lambda r=ready: self._obs_status_poll_done(r),
+            name="obs_status_poll_done",
+        )
 
     def _obs_status_poll_done(self, ready: bool) -> None:
         self._obs_status_poll_busy = False
@@ -336,14 +418,14 @@ class ScoreboardApp:
     def _schedule_obs_status_poll_after(self) -> None:
         if self._obs_status_win is None:
             return
-        if self._obs_status_poll_after is not None:
-            try:
-                self.root.after_cancel(self._obs_status_poll_after)
-            except (tk.TclError, ValueError):
-                pass
-            self._obs_status_poll_after = None
+        self.scheduler.cancel(self._obs_status_poll_after)
+        self._obs_status_poll_after = None
         ms = self.settings.obs_status_poll_interval_ms
-        self._obs_status_poll_after = self.root.after(ms, self._obs_status_poll_tick)
+        self._obs_status_poll_after = self.scheduler.schedule(
+            ms,
+            self._obs_status_poll_tick,
+            name="obs_status_poll_tick",
+        )
 
     def _obs_status_poll_tick(self) -> None:
         self._obs_status_poll_after = None
@@ -356,12 +438,8 @@ class ScoreboardApp:
         threading.Thread(target=self._obs_status_poll_worker, daemon=True).start()
 
     def _teardown_obs_status_indicator(self) -> None:
-        if self._obs_status_poll_after is not None:
-            try:
-                self.root.after_cancel(self._obs_status_poll_after)
-            except (tk.TclError, ValueError):
-                pass
-            self._obs_status_poll_after = None
+        self.scheduler.cancel(self._obs_status_poll_after)
+        self._obs_status_poll_after = None
         if self._obs_status_win is not None:
             try:
                 self._obs_status_win.destroy()
@@ -422,7 +500,10 @@ class ScoreboardApp:
             "t",
             lambda e: self.on_streamdeck_input(self.start_replay_buffer_loading_overlay),
         )
-        root.bind_all("<Escape>", lambda e: self.root.after(0, self.close_app))
+        root.bind_all(
+            "<Escape>",
+            lambda e: self.scheduler.schedule(0, self.close_app, name="escape_close_app"),
+        )
 
     def _dispatch_chord_colocated_action(self, key: str) -> None:
         if key == "q":
@@ -437,15 +518,15 @@ class ScoreboardApp:
             self._dispatch_chord_colocated_action(key)
             return
         self._obs_chord_pressed.add(key)
-        if self._obs_chord_after_id is not None:
-            self.root.after_cancel(self._obs_chord_after_id)
-        self._obs_chord_after_id = self.root.after(
+        self.scheduler.cancel(self._obs_chord_job)
+        self._obs_chord_job = self.scheduler.schedule(
             _OBS_RESTART_CHORD_DEBOUNCE_MS,
             self._flush_obs_restart_chord,
+            name="obs_restart_chord_debounce",
         )
 
     def _flush_obs_restart_chord(self) -> None:
-        self._obs_chord_after_id = None
+        self._obs_chord_job = None
         pressed = self._obs_chord_pressed
         self._obs_chord_pressed = set()
         if pressed == _OBS_RESTART_CHORD_KEYS:
@@ -499,12 +580,21 @@ class ScoreboardApp:
     def _after_replay_fade_out(self) -> None:
         if self.black_screen_active:
             self._show_black_screen_cover()
-        self.recording_overlay.lift()
-        self.rearm_focus_watchdog_after_transition("replay_fade_out")
+        # lift() is already invoked from draw_scores → restore_canvas_after_video; calling it
+        # again here reapplies Toplevel -topmost and caused a visible flash above the scoreboard.
+        self.scheduler.schedule(
+            80,
+            lambda: self.rearm_focus_watchdog_after_transition("replay_fade_out"),
+            name="replay_fade_out_focus_rearm",
+        )
 
     def on_streamdeck_input(self, action: Callable[[], None]) -> None:
         """Bind handlers call this only; work runs on the next event-loop tick."""
-        self.root.after(0, lambda a=action: self._run_streamdeck_action(a))
+        self.scheduler.schedule(
+            0,
+            lambda a=action: self._run_streamdeck_action(a),
+            name="streamdeck_action",
+        )
 
     def _run_streamdeck_action(self, action: Callable[[], None]) -> None:
         self.last_input_ms = int(time.monotonic() * 1000)
@@ -536,9 +626,10 @@ class ScoreboardApp:
         except Exception:
             _LOG.exception("OBS recording gate failed unexpectedly")
             ok, msg = False, "Could not verify OBS (unexpected error); see logs."
-        self.root.after(
+        self.scheduler.schedule(
             0,
             lambda o=ok, m=msg: self._on_recording_obs_check_done(o, m),
+            name="recording_obs_gate_done",
         )
 
     def _on_recording_obs_check_done(self, ok: bool, msg: str) -> None:
@@ -561,7 +652,11 @@ class ScoreboardApp:
 
     def _on_recording_dismiss_chord(self, _event: tk.Event | None = None) -> None:
         """Dismiss chord: do not let screensaver-only short-circuit skip dismiss."""
-        self.root.after(0, self._recording_dismiss_deferred)
+        self.scheduler.schedule(
+            0,
+            self._recording_dismiss_deferred,
+            name="recording_dismiss_deferred",
+        )
 
     def _recording_dismiss_deferred(self) -> None:
         self.last_input_ms = int(time.monotonic() * 1000)
@@ -648,9 +743,23 @@ class ScoreboardApp:
         rec = self.recording_overlay.recording_toplevel()
         return rec is not None and top == rec
 
-    def claim_keyboard_focus(self, *, reason: str = "unspecified") -> None:
+    def _focus_reclaim_eligible(self) -> bool:
+        """Whether periodic / automatic reclaim should run (centralized guard)."""
+        if not self._app_is_alive():
+            return False
         if self.replay.replay_video_active:
-            _LOG.debug("Focus reclaim skipped (reason=%s): replay video active", reason)
+            return False
+        if self.black_screen_active:
+            return False
+        if self.replay.blocks_idle():
+            return False
+        if self.recording_overlay.is_ended_message_showing():
+            return False
+        return True
+
+    def claim_keyboard_focus(self, *, reason: str = "unspecified") -> None:
+        if not self._focus_reclaim_eligible():
+            _LOG.debug("Focus reclaim skipped (reason=%s): ineligible context", reason)
             return
 
         used_win32 = os.name == "nt" and not self.recording_overlay.is_ui_active()
@@ -750,7 +859,7 @@ class ScoreboardApp:
 
         self.focus_watchdog_ticks_left -= 1
 
-        if not self.replay.replay_video_active:
+        if self._focus_reclaim_eligible():
             self.claim_keyboard_focus(reason="watchdog")
 
         self._focus_watchdog_job = self.scheduler.schedule(
@@ -776,9 +885,9 @@ class ScoreboardApp:
             self._synthetic_click_jobs.append(jid)
 
     def try_synthetic_focus_click(self) -> None:
-        if not self.settings.synthetic_focus_click or self.replay.replay_video_active:
+        if not self.settings.synthetic_focus_click:
             return
-        if self.recording_overlay.is_ended_message_showing():
+        if not self._focus_reclaim_eligible():
             return
 
         if self._synthetic_click_attempts >= 3:
@@ -803,7 +912,14 @@ class ScoreboardApp:
             _LOG.debug("Synthetic focus click failed", exc_info=True)
 
     def close_app(self) -> None:
+        if self._closing:
+            return
+        self._closing = True
         _LOG.info("Application shutdown requested")
+        self._obs_status_poll_busy = False
+        self._recording_obs_check_in_flight = False
+        self.scheduler.cancel(self._obs_chord_job)
+        self._obs_chord_job = None
         self._teardown_obs_status_indicator()
         for jid in self._focus_claim_jobs:
             self.scheduler.cancel(jid)
@@ -813,6 +929,8 @@ class ScoreboardApp:
         self._synthetic_click_jobs.clear()
         self.scheduler.cancel(self._release_topmost_job)
         self._release_topmost_job = None
+        self.scheduler.cancel(self._encoder_recording_poll_job)
+        self._encoder_recording_poll_job = None
 
         self.screensaver.teardown()
         self._encoder_status_overlay.teardown()

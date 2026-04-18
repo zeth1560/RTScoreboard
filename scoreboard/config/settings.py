@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,6 +27,7 @@ DEFAULT_REPLAY_BUFFER_LOADING_DIR = "assets/replay_buffer_loading"
 DEFAULT_ENCODER_STATE_FILE = "encoder_state.json"
 DEFAULT_ENCODER_READY_IMAGE = "assets/recorderstatus/ready.png"
 DEFAULT_ENCODER_UNAVAILABLE_IMAGE = "assets/recorderstatus/unavailable.png"
+DEFAULT_LAUNCHER_RESTART_OBS_SCRIPT = r"C:\ReplayTrove\launcher\restart_obs.ps1"
 
 IDLE_TIMEOUT_MS = 30 * 60 * 1000
 SLIDESHOW_INTERVAL_MS = 12 * 1000
@@ -33,7 +35,8 @@ SLIDESHOW_FADE_DURATION_MS = 1000
 SLIDESHOW_FADE_STEPS = 10
 SUPPORTED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
 
-REPLAY_VIDEO_START_DELAY_MS = 3000
+# Hold IR slate on screen this long after fade-in before launching mpv (extra time for clip to finish writing).
+REPLAY_VIDEO_START_DELAY_MS = 5000
 REPLAY_VIDEO_POLL_MS = 500
 REPLAY_RETURN_SLATE_HOLD_MS = 350
 # If fade or handoff hangs, force recovery (ms)
@@ -126,6 +129,18 @@ def _normalize_path(p: str | None) -> str:
     return str(p).strip().strip('"').strip("'")
 
 
+def _parse_mpv_additional_args(raw: str | None) -> tuple[str, ...]:
+    """Split MPV_ADDITIONAL_ARGS with shlex (quoted tokens allowed)."""
+    if raw is None or not str(raw).strip():
+        return ()
+    try:
+        parts = shlex.split(str(raw).strip(), posix=os.name != "nt")
+    except ValueError as e:
+        _LOG.warning("MPV_ADDITIONAL_ARGS shlex split failed: %s", e)
+        return ()
+    return tuple(p for p in parts if p)
+
+
 @dataclass(frozen=True)
 class Settings:
     """Validated configuration loaded once at startup."""
@@ -166,6 +181,10 @@ class Settings:
     encoder_status_stale_seconds: int
     encoder_status_margin_px: int
 
+    # Recording overlay driven by encoder_state.json (long recording signals).
+    recording_encoder_sync_enabled: bool
+    recording_encoder_poll_ms: int
+
     # Timing (fixed product defaults; not from .env unless we add later)
     idle_timeout_ms: int = IDLE_TIMEOUT_MS
     slideshow_interval_ms: int = SLIDESHOW_INTERVAL_MS
@@ -202,6 +221,11 @@ class Settings:
     replay_transition_timeout_ms: int = REPLAY_TRANSITION_TIMEOUT_MS
     replay_slate_stuck_timeout_ms: int = REPLAY_SLATE_STUCK_TIMEOUT_MS
     replay_file_max_age_seconds: int = DEFAULT_REPLAY_FILE_MAX_AGE_SECONDS
+    # When instant replay file check fails, OBS WebSocket BroadcastCustomEvent (opt-in).
+    replay_obs_broadcast_on_unavailable: bool = False
+    # When instant replay file check fails, run launcher restart_obs.ps1 (Windows; opt-in).
+    replay_launcher_restart_obs_on_unavailable: bool = False
+    replay_launcher_restart_obs_script: str = DEFAULT_LAUNCHER_RESTART_OBS_SCRIPT
 
     # OBS WebSocket (optional gate before recording overlay — RECORDING_OBS_HEALTH_CHECK).
     recording_obs_health_check: bool = False
@@ -229,6 +253,26 @@ class Settings:
     # If True, status shows unavailable while main output recording is active.
     # Default False so "OBS is up" reads as READY for operators.
     obs_status_require_main_output_idle: bool = False
+
+    # mpv instant-replay subprocess (MPV_* env vars)
+    mpv_hwdec_enabled: bool = False
+    mpv_hwdec_mode: str = "auto"
+    mpv_fullscreen_enabled: bool = True
+    mpv_keep_open_enabled: bool = True
+    mpv_loop_enabled: bool = True
+    mpv_video_sync_mode: str = "display-resample"
+    mpv_framedrop_mode: str = "vo"
+    mpv_interpolation_enabled: bool = False
+    mpv_force_window_enabled: bool = True
+    mpv_additional_args: tuple[str, ...] = ()
+    mpv_process_priority: str = "normal"
+    # Reduce contention with OBS (encoding / GPU composite / fullscreen flip chain).
+    mpv_obs_friendly: bool = True
+    mpv_borderless_fullscreen: bool = True
+    mpv_obs_lower_process_priority: bool = True
+    mpv_obs_force_software_decode: bool = False
+    # When mpv_obs_friendly: fast | balanced | hq (scaling / mpv builtin profiles).
+    mpv_replay_quality: str = "fast"
 
 
 def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
@@ -263,6 +307,37 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         mpv_exit = "Ctrl+Alt+q"
 
     mpv_embedded = _env_truthy(g("MPV_EMBEDDED"), False)
+
+    mpv_hwdec_enabled = _env_truthy(g("MPV_HWDEC_ENABLED"), False)
+    mpv_hwdec_mode = (g("MPV_HWDEC_MODE", "auto") or "auto").strip()
+    mpv_fullscreen_enabled = _env_truthy(g("MPV_FULLSCREEN_ENABLED"), True)
+    mpv_keep_open_enabled = _env_truthy(g("MPV_KEEP_OPEN_ENABLED"), True)
+    mpv_loop_enabled = _env_truthy(g("MPV_LOOP_ENABLED"), True)
+    # display-resample is gentler on vsync/display than desync when OBS is compositing capture.
+    mpv_video_sync_mode = (g("MPV_VIDEO_SYNC_MODE", "display-resample") or "display-resample").strip()
+    mpv_framedrop_mode = (g("MPV_FRAMEDROP_MODE", "vo") or "vo").strip()
+    mpv_interpolation_enabled = _env_truthy(g("MPV_INTERPOLATION_ENABLED"), False)
+    mpv_force_window_enabled = _env_truthy(g("MPV_FORCE_WINDOW_ENABLED"), True)
+    mpv_additional_args = _parse_mpv_additional_args(g("MPV_ADDITIONAL_ARGS"))
+    mpv_obs_friendly = _env_truthy(g("MPV_OBS_FRIENDLY"), True)
+    mpv_borderless_fullscreen = _env_truthy(g("MPV_BORDERLESS_FULLSCREEN"), True)
+    mpv_obs_lower_process_priority = _env_truthy(g("MPV_OBS_LOWER_PROCESS_PRIORITY"), True)
+    mpv_obs_force_software_decode = _env_truthy(g("MPV_OBS_FORCE_SOFTWARE_DECODE"), False)
+    _mpv_q = (g("MPV_REPLAY_QUALITY", "fast") or "fast").strip().lower()
+    if _mpv_q not in ("fast", "balanced", "hq"):
+        _LOG.warning(
+            "MPV_REPLAY_QUALITY=%r invalid (use fast|balanced|hq); using fast",
+            _mpv_q,
+        )
+        mpv_replay_quality = "fast"
+    else:
+        mpv_replay_quality = _mpv_q
+    _mpv_prio = (g("MPV_PROCESS_PRIORITY", "normal") or "normal").strip().lower()
+    if _mpv_prio not in ("normal", "low"):
+        _LOG.warning("MPV_PROCESS_PRIORITY=%r invalid; using normal", _mpv_prio)
+        mpv_process_priority = "normal"
+    else:
+        mpv_process_priority = _mpv_prio
 
     syn_default = True if os.name == "nt" else False
     synthetic_focus_click = _env_truthy(g("SYNTHETIC_FOCUS_CLICK"), syn_default)
@@ -465,6 +540,17 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         minimum=0,
     )
 
+    recording_encoder_sync_enabled = _env_truthy(
+        g("RECORDING_ENCODER_SYNC_ENABLED"),
+        True,
+    )
+    recording_encoder_poll_ms = _parse_positive_int(
+        g("RECORDING_ENCODER_POLL_MS", "1000"),
+        1000,
+        "RECORDING_ENCODER_POLL_MS",
+        minimum=250,
+    )
+
     replay_enabled = _env_truthy(g("REPLAY_ENABLED"), True)
     slideshow_enabled = _env_truthy(g("SLIDESHOW_ENABLED"), True)
     scoreboard_debug = _env_truthy(g("SCOREBOARD_DEBUG"), False)
@@ -498,6 +584,21 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         "REPLAY_FILE_MAX_AGE_SECONDS",
         minimum=0,
     )
+    replay_obs_broadcast_on_unavailable = _env_truthy(
+        g("REPLAY_OBS_BROADCAST_ON_UNAVAILABLE"), False
+    )
+    replay_launcher_restart_obs_on_unavailable = _env_truthy(
+        g("REPLAY_LAUNCHER_RESTART_OBS_ON_UNAVAILABLE"), False
+    )
+    replay_launcher_restart_obs_script = _normalize_path(
+        g(
+            "REPLAY_LAUNCHER_RESTART_OBS_SCRIPT",
+            DEFAULT_LAUNCHER_RESTART_OBS_SCRIPT,
+        )
+    ) or DEFAULT_LAUNCHER_RESTART_OBS_SCRIPT
+    _rls = Path(replay_launcher_restart_obs_script)
+    if not _rls.is_absolute():
+        replay_launcher_restart_obs_script = str((_repo_root / _rls).resolve())
 
     recording_obs_health_check = _env_truthy(g("RECORDING_OBS_HEALTH_CHECK"), False)
     obs_websocket_host = (g("OBS_WEBSOCKET_HOST", "localhost") or "localhost").strip()
@@ -589,6 +690,22 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         mpv_path=mpv_path,
         mpv_exit_hotkey=mpv_exit,
         mpv_embedded=mpv_embedded,
+        mpv_hwdec_enabled=mpv_hwdec_enabled,
+        mpv_hwdec_mode=mpv_hwdec_mode,
+        mpv_fullscreen_enabled=mpv_fullscreen_enabled,
+        mpv_keep_open_enabled=mpv_keep_open_enabled,
+        mpv_loop_enabled=mpv_loop_enabled,
+        mpv_video_sync_mode=mpv_video_sync_mode,
+        mpv_framedrop_mode=mpv_framedrop_mode,
+        mpv_interpolation_enabled=mpv_interpolation_enabled,
+        mpv_force_window_enabled=mpv_force_window_enabled,
+        mpv_additional_args=mpv_additional_args,
+        mpv_process_priority=mpv_process_priority,
+        mpv_obs_friendly=mpv_obs_friendly,
+        mpv_borderless_fullscreen=mpv_borderless_fullscreen,
+        mpv_obs_lower_process_priority=mpv_obs_lower_process_priority,
+        mpv_obs_force_software_decode=mpv_obs_force_software_decode,
+        mpv_replay_quality=mpv_replay_quality,
         synthetic_focus_click=synthetic_focus_click,
         recording_max_minutes=rec_minutes,
         recording_duration_sec=recording_duration_sec,
@@ -607,6 +724,8 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         encoder_status_poll_ms=encoder_status_poll_ms,
         encoder_status_stale_seconds=encoder_status_stale_seconds,
         encoder_status_margin_px=encoder_status_margin_px,
+        recording_encoder_sync_enabled=recording_encoder_sync_enabled,
+        recording_encoder_poll_ms=recording_encoder_poll_ms,
         recording_session_end_info_ms=recording_session_end_info_ms,
         recording_session_end_message=recording_session_end_message,
         recording_overlay_width=recording_overlay_width,
@@ -628,6 +747,9 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         replay_transition_timeout_ms=transition_timeout,
         replay_slate_stuck_timeout_ms=slate_stuck_timeout,
         replay_file_max_age_seconds=replay_file_max_age_seconds,
+        replay_obs_broadcast_on_unavailable=replay_obs_broadcast_on_unavailable,
+        replay_launcher_restart_obs_on_unavailable=replay_launcher_restart_obs_on_unavailable,
+        replay_launcher_restart_obs_script=replay_launcher_restart_obs_script,
         recording_obs_health_check=recording_obs_health_check,
         obs_websocket_host=obs_websocket_host,
         obs_websocket_port=obs_websocket_port,
@@ -694,6 +816,22 @@ def summarize_settings(settings: Settings) -> str:
         f"replay_unavailable_image={settings.replay_unavailable_image!r}",
         f"mpv_path={settings.mpv_path!r}",
         f"mpv_embedded={settings.mpv_embedded}",
+        f"mpv_hwdec_enabled={settings.mpv_hwdec_enabled}",
+        f"mpv_hwdec_mode={settings.mpv_hwdec_mode!r}",
+        f"mpv_fullscreen_enabled={settings.mpv_fullscreen_enabled}",
+        f"mpv_keep_open_enabled={settings.mpv_keep_open_enabled}",
+        f"mpv_loop_enabled={settings.mpv_loop_enabled}",
+        f"mpv_video_sync_mode={settings.mpv_video_sync_mode!r}",
+        f"mpv_framedrop_mode={settings.mpv_framedrop_mode!r}",
+        f"mpv_interpolation_enabled={settings.mpv_interpolation_enabled}",
+        f"mpv_force_window_enabled={settings.mpv_force_window_enabled}",
+        f"mpv_additional_args={settings.mpv_additional_args!r}",
+        f"mpv_process_priority={settings.mpv_process_priority!r}",
+        f"mpv_obs_friendly={settings.mpv_obs_friendly}",
+        f"mpv_borderless_fullscreen={settings.mpv_borderless_fullscreen}",
+        f"mpv_obs_lower_process_priority={settings.mpv_obs_lower_process_priority}",
+        f"mpv_obs_force_software_decode={settings.mpv_obs_force_software_decode}",
+        f"mpv_replay_quality={settings.mpv_replay_quality!r}",
         f"mpv_exit_hotkey={settings.mpv_exit_hotkey!r}",
         f"synthetic_focus_click={settings.synthetic_focus_click}",
         f"recording_max_minutes={settings.recording_max_minutes}",
@@ -720,6 +858,8 @@ def summarize_settings(settings: Settings) -> str:
         f"encoder_status_poll_ms={settings.encoder_status_poll_ms}",
         f"encoder_status_stale_seconds={settings.encoder_status_stale_seconds}",
         f"encoder_status_margin_px={settings.encoder_status_margin_px}",
+        f"recording_encoder_sync_enabled={settings.recording_encoder_sync_enabled}",
+        f"recording_encoder_poll_ms={settings.recording_encoder_poll_ms}",
         f"idle_timeout_ms={settings.idle_timeout_ms}",
         f"slideshow_interval_ms={settings.slideshow_interval_ms}",
         f"replay_enabled={settings.replay_enabled}",
@@ -730,6 +870,9 @@ def summarize_settings(settings: Settings) -> str:
         f"replay_transition_timeout_ms={settings.replay_transition_timeout_ms}",
         f"replay_slate_stuck_timeout_ms={settings.replay_slate_stuck_timeout_ms}",
         f"replay_file_max_age_seconds={settings.replay_file_max_age_seconds}",
+        f"replay_obs_broadcast_on_unavailable={settings.replay_obs_broadcast_on_unavailable}",
+        f"replay_launcher_restart_obs_on_unavailable={settings.replay_launcher_restart_obs_on_unavailable}",
+        f"replay_launcher_restart_obs_script={settings.replay_launcher_restart_obs_script!r}",
         f"recording_obs_health_check={settings.recording_obs_health_check}",
         f"obs_websocket_host={settings.obs_websocket_host!r}",
         f"obs_websocket_port={settings.obs_websocket_port}",

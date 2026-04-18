@@ -139,3 +139,50 @@ def check_obs_recording_gate(settings: Settings) -> tuple[bool, str]:
             "RECORDING_OBS_HEALTH_CHECK off.",
         )
     return (False, reason)
+
+
+def notify_obs_instant_replay_unavailable(settings: Settings, reason: str) -> None:
+    """
+    Tell OBS the instant replay file is not ready (missing, empty, or too stale).
+
+    Uses WebSocket ``BroadcastCustomEvent`` (OBS 28+ built-in server). Subscribed
+    WebSocket clients receive ``eventType`` ``CustomEvent`` with ``eventData`` set to
+    the payload below (see obs-websocket protocol docs).
+
+    Reuses ``OBS_WEBSOCKET_*`` connection settings. No-op when
+    ``replay_obs_broadcast_on_unavailable`` is off; when on, requires ``obsws-python``.
+    """
+    if not settings.replay_obs_broadcast_on_unavailable:
+        return
+    try:
+        import obsws_python as obs
+        from obsws_python.error import OBSSDKError, OBSSDKTimeoutError
+    except ImportError:
+        _LOG.debug("instant_replay_unavailable OBS notify skipped (obsws-python not installed)")
+        return
+
+    timeout = max(float(settings.obs_websocket_timeout_sec), 0.5)
+    event_data = {
+        "source": "replaytrove_scoreboard",
+        "event": "instant_replay_unavailable",
+        "reason": reason,
+    }
+    try:
+        with obs.ReqClient(
+            host=settings.obs_websocket_host,
+            port=settings.obs_websocket_port,
+            password=settings.obs_websocket_password or "",
+            timeout=timeout,
+        ) as client:
+            client.broadcast_custom_event(event_data)
+        _LOG.info(
+            "OBS CustomEvent instant_replay_unavailable broadcast ok reason=%r",
+            reason,
+        )
+    except OBSSDKTimeoutError:
+        _LOG.debug(
+            "instant_replay_unavailable OBS broadcast timed out (%.1fs)",
+            timeout,
+        )
+    except (OBSSDKError, OSError) as e:
+        _LOG.debug("instant_replay_unavailable OBS broadcast failed: %s", e)
