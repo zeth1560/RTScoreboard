@@ -29,6 +29,8 @@ DEFAULT_ENCODER_READY_IMAGE = "assets/recorderstatus/ready.png"
 DEFAULT_ENCODER_UNAVAILABLE_IMAGE = "assets/recorderstatus/unavailable.png"
 DEFAULT_LAUNCHER_RESTART_OBS_SCRIPT = r"C:\ReplayTrove\launcher\restart_obs.ps1"
 DEFAULT_LAUNCHER_STATUS_JSON_PATH = r"C:\ReplayTrove\launcher\scoreboard_status.json"
+# Separate from MPV_EXIT_HOTKEY (mpv still listens for quit on that chord).
+DEFAULT_REPLAY_STOP_HOTKEY = "Ctrl+Alt+e"
 
 IDLE_TIMEOUT_MS = 30 * 60 * 1000
 SLIDESHOW_INTERVAL_MS = 12 * 1000
@@ -49,6 +51,10 @@ DEFAULT_REPLAY_FILE_MAX_AGE_SECONDS = 120
 FOCUS_WATCHDOG_INTERVAL_MS = 3000
 # ~12.5 minutes at default interval (250 * 3s); pilot can override via FOCUS_WATCHDOG_TICKS.
 FOCUS_WATCHDOG_TICKS = 250
+# Root window -topmost duration (ms) after leaving screensaver (OBS/encoder Z-order flashes).
+DEFAULT_SCREENSAVER_EXIT_TOPMOST_HOLD_MS = 4500
+# Routine focus reclaims (watchdog, screensaver slideshow, synthetic-click follow-up).
+DEFAULT_FOCUS_TOPMOST_HOLD_MS = 3000
 
 RECORDING_DEFAULT_DURATION_MINUTES = 20
 RECORDING_COUNTDOWN_TICK_MS = 1000
@@ -69,6 +75,27 @@ RECORDING_ENDED_GRAPHIC_HOLD_MS_DEFAULT = 10_000
 RECORDING_OVERLAY_TIMER_X_FRAC_DEFAULT = 0.28
 RECORDING_OVERLAY_TIMER_Y_FRAC_DEFAULT = 0.36
 RECORDING_OVERLAY_TIMER_FONT_SIZE_DEFAULT = 22
+
+# Scales encoder status strip, replay-buffer loading frames, and recording overlay (0.25–1.0).
+DEFAULT_AUX_OVERLAY_DISPLAY_SCALE = 0.5
+
+
+def _parse_aux_overlay_display_scale(raw: str | None) -> float:
+    default = DEFAULT_AUX_OVERLAY_DISPLAY_SCALE
+    if raw is None or str(raw).strip() == "":
+        return default
+    try:
+        v = float(str(raw).strip())
+    except ValueError:
+        _LOG.warning("AUX_OVERLAY_DISPLAY_SCALE=%r invalid; using %s", raw, default)
+        return default
+    if v < 0.25:
+        _LOG.warning("AUX_OVERLAY_DISPLAY_SCALE=%s below 0.25; clamping", v)
+        return 0.25
+    if v > 1.0:
+        _LOG.warning("AUX_OVERLAY_DISPLAY_SCALE=%s above 1.0; clamping", v)
+        return 1.0
+    return v
 
 
 def _env_truthy(value: str | None, default: bool) -> bool:
@@ -157,6 +184,8 @@ class Settings:
 
     # mpv / replay
     mpv_exit_hotkey: str
+    replay_start_hotkey: str
+    replay_stop_hotkey: str
     mpv_embedded: bool
 
     # Windows focus
@@ -186,6 +215,8 @@ class Settings:
     recording_encoder_sync_enabled: bool
     recording_encoder_poll_ms: int
 
+    aux_overlay_display_scale: float = DEFAULT_AUX_OVERLAY_DISPLAY_SCALE
+
     # Timing (fixed product defaults; not from .env unless we add later)
     idle_timeout_ms: int = IDLE_TIMEOUT_MS
     slideshow_interval_ms: int = SLIDESHOW_INTERVAL_MS
@@ -196,6 +227,8 @@ class Settings:
     replay_return_slate_hold_ms: int = REPLAY_RETURN_SLATE_HOLD_MS
     focus_watchdog_interval_ms: int = FOCUS_WATCHDOG_INTERVAL_MS
     focus_watchdog_ticks: int = FOCUS_WATCHDOG_TICKS
+    screensaver_exit_topmost_hold_ms: int = DEFAULT_SCREENSAVER_EXIT_TOPMOST_HOLD_MS
+    focus_topmost_hold_ms: int = DEFAULT_FOCUS_TOPMOST_HOLD_MS
     recording_countdown_tick_ms: int = RECORDING_COUNTDOWN_TICK_MS
     recording_blink_interval_ms: int = RECORDING_BLINK_INTERVAL_MS
     recording_overlay_width: int = RECORDING_OVERLAY_WIDTH
@@ -310,6 +343,14 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
     mpv_exit = (g("MPV_EXIT_HOTKEY", "Ctrl+Alt+q") or "Ctrl+Alt+q").strip()
     if not mpv_exit:
         mpv_exit = "Ctrl+Alt+q"
+
+    replay_start_hotkey = (g("REPLAY_START_HOTKEY", "i") or "i").strip()
+    if not replay_start_hotkey:
+        replay_start_hotkey = "i"
+    _replay_stop_raw = (g("REPLAY_STOP_HOTKEY", "") or "").strip()
+    replay_stop_hotkey = (
+        _replay_stop_raw if _replay_stop_raw else DEFAULT_REPLAY_STOP_HOTKEY
+    )
 
     mpv_embedded = _env_truthy(g("MPV_EMBEDDED"), False)
 
@@ -545,6 +586,10 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         minimum=0,
     )
 
+    aux_overlay_display_scale = _parse_aux_overlay_display_scale(
+        g("AUX_OVERLAY_DISPLAY_SCALE", str(DEFAULT_AUX_OVERLAY_DISPLAY_SCALE))
+    )
+
     recording_encoder_sync_enabled = _env_truthy(
         g("RECORDING_ENCODER_SYNC_ENABLED"),
         True,
@@ -689,6 +734,37 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         "FOCUS_WATCHDOG_TICKS",
         minimum=1,
     )
+    screensaver_exit_topmost_hold_ms = _parse_positive_int(
+        g(
+            "SCOREBOARD_SCREENSAVER_EXIT_TOPMOST_MS",
+            str(DEFAULT_SCREENSAVER_EXIT_TOPMOST_HOLD_MS),
+        ),
+        DEFAULT_SCREENSAVER_EXIT_TOPMOST_HOLD_MS,
+        "SCOREBOARD_SCREENSAVER_EXIT_TOPMOST_MS",
+        minimum=150,
+    )
+    if screensaver_exit_topmost_hold_ms > 120_000:
+        _LOG.warning(
+            "SCOREBOARD_SCREENSAVER_EXIT_TOPMOST_MS=%s above 120000; capping",
+            screensaver_exit_topmost_hold_ms,
+        )
+        screensaver_exit_topmost_hold_ms = 120_000
+
+    focus_topmost_hold_ms = _parse_positive_int(
+        g(
+            "SCOREBOARD_FOCUS_TOPMOST_MS",
+            str(DEFAULT_FOCUS_TOPMOST_HOLD_MS),
+        ),
+        DEFAULT_FOCUS_TOPMOST_HOLD_MS,
+        "SCOREBOARD_FOCUS_TOPMOST_MS",
+        minimum=150,
+    )
+    if focus_topmost_hold_ms > 120_000:
+        _LOG.warning(
+            "SCOREBOARD_FOCUS_TOPMOST_MS=%s above 120000; capping",
+            focus_topmost_hold_ms,
+        )
+        focus_topmost_hold_ms = 120_000
 
     _raw_log = os.environ.get("SCOREBOARD_LOG_FILE")
     if _raw_log is None:
@@ -711,6 +787,8 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         replay_unavailable_image=replay_unavailable_image,
         mpv_path=mpv_path,
         mpv_exit_hotkey=mpv_exit,
+        replay_start_hotkey=replay_start_hotkey,
+        replay_stop_hotkey=replay_stop_hotkey,
         mpv_embedded=mpv_embedded,
         mpv_hwdec_enabled=mpv_hwdec_enabled,
         mpv_hwdec_mode=mpv_hwdec_mode,
@@ -748,6 +826,7 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         encoder_status_margin_px=encoder_status_margin_px,
         recording_encoder_sync_enabled=recording_encoder_sync_enabled,
         recording_encoder_poll_ms=recording_encoder_poll_ms,
+        aux_overlay_display_scale=aux_overlay_display_scale,
         launcher_status_enabled=launcher_status_enabled,
         launcher_status_json_path=launcher_status_json_path,
         recording_session_end_info_ms=recording_session_end_info_ms,
@@ -791,6 +870,8 @@ def load_settings(env_file: str = DEFAULT_ENV_FILE) -> Settings:
         obs_status_require_main_output_idle=obs_status_require_main_output_idle,
         focus_watchdog_interval_ms=focus_watchdog_interval_ms,
         focus_watchdog_ticks=focus_watchdog_ticks,
+        screensaver_exit_topmost_hold_ms=screensaver_exit_topmost_hold_ms,
+        focus_topmost_hold_ms=focus_topmost_hold_ms,
     )
 
     _validate_hotkey_specs(settings)
@@ -819,6 +900,8 @@ def _validate_hotkey_specs(settings: Settings) -> None:
             settings.replay_buffer_loading_hotkey,
             "t",
         ),
+        ("REPLAY_START_HOTKEY", settings.replay_start_hotkey, "i"),
+        ("REPLAY_STOP_HOTKEY", settings.replay_stop_hotkey, DEFAULT_REPLAY_STOP_HOTKEY),
     ):
         if parse_recording_hotkey_to_tk_bind(spec) is None:
             _LOG.warning(
@@ -857,6 +940,8 @@ def summarize_settings(settings: Settings) -> str:
         f"mpv_obs_force_software_decode={settings.mpv_obs_force_software_decode}",
         f"mpv_replay_quality={settings.mpv_replay_quality!r}",
         f"mpv_exit_hotkey={settings.mpv_exit_hotkey!r}",
+        f"replay_start_hotkey={settings.replay_start_hotkey!r}",
+        f"replay_stop_hotkey={settings.replay_stop_hotkey!r}",
         f"synthetic_focus_click={settings.synthetic_focus_click}",
         f"recording_max_minutes={settings.recording_max_minutes}",
         f"recording_ended_hold_ms={settings.recording_ended_hold_ms}",
@@ -882,6 +967,7 @@ def summarize_settings(settings: Settings) -> str:
         f"encoder_status_poll_ms={settings.encoder_status_poll_ms}",
         f"encoder_status_stale_seconds={settings.encoder_status_stale_seconds}",
         f"encoder_status_margin_px={settings.encoder_status_margin_px}",
+        f"aux_overlay_display_scale={settings.aux_overlay_display_scale}",
         f"recording_encoder_sync_enabled={settings.recording_encoder_sync_enabled}",
         f"recording_encoder_poll_ms={settings.recording_encoder_poll_ms}",
         f"launcher_status_enabled={settings.launcher_status_enabled}",
@@ -915,6 +1001,8 @@ def summarize_settings(settings: Settings) -> str:
         f"obs_status_require_main_output_idle={settings.obs_status_require_main_output_idle}",
         f"focus_watchdog_ticks={settings.focus_watchdog_ticks}",
         f"focus_watchdog_interval_ms={settings.focus_watchdog_interval_ms}",
+        f"screensaver_exit_topmost_hold_ms={settings.screensaver_exit_topmost_hold_ms}",
+        f"focus_topmost_hold_ms={settings.focus_topmost_hold_ms}",
     ]
     return "\n".join(lines)
 

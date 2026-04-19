@@ -1,8 +1,8 @@
 {
-  "state": "ready",
-  "status_text": "Recorder Ready (Long-Only)",
-  "encoder_ready": true,
-  "allow_record_timer_overlay": true,
+  "state": "shutting_down",
+  "status_text": "Recorder Shutting Down",
+  "encoder_ready": false,
+  "allow_record_timer_overlay": false,
   "rolling_buffer_applicable": false,
   "long_recording_active": false,
   "long_recording_session_seq": 0,
@@ -15,5 +15,5 @@
   "long_recording_last_fault": "",
   "mode": "long_only",
   "schema_version": 1,
-  "updated_at": "2026-04-18T14:12:47.308877+00:00"
+  "updated_at": "2026-04-19T19:40:14.979933+00:00"
 }

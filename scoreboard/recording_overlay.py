@@ -71,6 +71,21 @@ class RecordingOverlay:
         self._header_label: tk.Label | None = None
         self._main_label: tk.Label | None = None
 
+    def _ov_scale(self) -> float:
+        return self._settings.aux_overlay_display_scale
+
+    def _ov_w(self) -> int:
+        return max(80, int(round(self._settings.recording_overlay_width * self._ov_scale())))
+
+    def _ov_h(self) -> int:
+        return max(40, int(round(self._settings.recording_overlay_height * self._ov_scale())))
+
+    def _ov_px(self, n: int) -> int:
+        return int(round(n * self._ov_scale()))
+
+    def _ov_font_pt(self, base: int) -> int:
+        return max(8, int(round(base * self._ov_scale())))
+
     def _emit_ui_visibility(self, visible: bool) -> None:
         if self._on_ui_visibility is None:
             return
@@ -115,10 +130,11 @@ class RecordingOverlay:
         )
 
     def _geometry(self) -> str:
-        w = self._settings.recording_overlay_width
-        h = self._settings.recording_overlay_height
-        x = self._screen_width - w - 36
-        y = 28
+        w = self._ov_w()
+        h = self._ov_h()
+        s = self._ov_scale()
+        x = self._screen_width - w - max(8, int(round(36 * s)))
+        y = max(8, int(round(28 * s)))
         return f"{w}x{h}+{x}+{y}"
 
     def _canvas_progress_enabled(self) -> bool:
@@ -141,29 +157,29 @@ class RecordingOverlay:
         )
 
     def _timer_font_tuple(self) -> tuple[str, int, str]:
-        size = self._settings.recording_overlay_timer_font_size
+        raw = self._settings.recording_overlay_timer_font_size
+        s = self._ov_scale()
+        abs_scaled = max(8, int(round(abs(raw) * s)))
+        size = -abs_scaled if raw < 0 else abs_scaled
         for name in ("Impact", "Arial Narrow", "Arial"):
             if name in tkfont.families(self._root):
                 return (name, size, "bold")
         return ("Arial", size, "bold")
 
     def _timer_canvas_xy(self) -> tuple[int, int]:
-        w = self._settings.recording_overlay_width
-        h = self._settings.recording_overlay_height
+        w = self._ov_w()
+        h = self._ov_h()
         tx = int(w * self._settings.recording_overlay_timer_x_frac)
         ty = int(h * self._settings.recording_overlay_timer_y_frac)
-        tx += self._settings.recording_overlay_timer_offset_x_px
-        ty += self._settings.recording_overlay_timer_offset_y_px
+        tx += self._ov_px(self._settings.recording_overlay_timer_offset_x_px)
+        ty += self._ov_px(self._settings.recording_overlay_timer_offset_y_px)
         return max(0, tx), max(0, ty)
 
     def _load_resized_photo(self, path: str) -> ImageTk.PhotoImage | None:
         try:
             with Image.open(path) as img:
                 rgba = img.convert("RGBA")
-                tw, th = (
-                    self._settings.recording_overlay_width,
-                    self._settings.recording_overlay_height,
-                )
+                tw, th = self._ov_w(), self._ov_h()
                 if rgba.size != (tw, th):
                     rgba = rgba.resize((tw, th), Image.Resampling.LANCZOS)
                 return ImageTk.PhotoImage(rgba)
@@ -185,10 +201,7 @@ class RecordingOverlay:
         self._timer_text_id = None
 
     def _ensure_graphic_photos_loaded(self) -> bool:
-        wh = (
-            self._settings.recording_overlay_width,
-            self._settings.recording_overlay_height,
-        )
+        wh = (self._ov_w(), self._ov_h())
         if self._graphic_cache_wh == wh and self._tk_photo_progress_on is not None:
             return True
         self._invalidate_graphic_photos()
@@ -207,10 +220,7 @@ class RecordingOverlay:
         return True
 
     def _ensure_ended_photo_loaded(self) -> bool:
-        wh = (
-            self._settings.recording_overlay_width,
-            self._settings.recording_overlay_height,
-        )
+        wh = (self._ov_w(), self._ov_h())
         if self._tk_photo_ended is not None and self._graphic_cache_wh == wh:
             return True
         path = self._settings.recording_ended_image
@@ -263,7 +273,7 @@ class RecordingOverlay:
         outer.pack(fill="both", expand=True)
         self._outer = outer
 
-        w, h = self._settings.recording_overlay_width, self._settings.recording_overlay_height
+        w, h = self._ov_w(), self._ov_h()
         self._canvas = tk.Canvas(
             outer,
             width=w,
@@ -275,29 +285,30 @@ class RecordingOverlay:
         body = tk.Frame(outer, bg="black")
         self._body_inner = body
 
+        ls = max(16, int(round(48 * self._ov_scale())))
         light_canvas = tk.Canvas(
             body,
-            width=48,
-            height=48,
+            width=ls,
+            height=ls,
             bg="black",
             highlightthickness=0,
             highlightbackground="black",
         )
         self._light_canvas = light_canvas
         self._rebuild_circle()
-        light_canvas.pack(side="left", padx=(0, 12))
+        light_canvas.pack(side="left", padx=(0, max(4, self._ov_px(12))))
 
         text_col = tk.Frame(body, bg="black")
         text_col.pack(side="left", fill="both", expand=True)
         self._text_col = text_col
 
-        wrap = self._settings.recording_overlay_width - 100
+        wrap = max(120, w - self._ov_px(100))
         self._header_label = tk.Label(
             text_col,
             text="",
             fg="#cccccc",
             bg="black",
-            font=("Arial", 14, "bold"),
+            font=("Arial", self._ov_font_pt(14), "bold"),
             justify="left",
             wraplength=wrap,
             anchor="w",
@@ -310,7 +321,7 @@ class RecordingOverlay:
             text="",
             fg="white",
             bg="black",
-            font=("Arial", 26, "bold"),
+            font=("Arial", self._ov_font_pt(26), "bold"),
             justify="left",
             wraplength=wrap,
             anchor="w",
@@ -347,8 +358,15 @@ class RecordingOverlay:
         if c is None:
             return
         c.delete("all")
+        try:
+            ls = int(float(c.cget("width")))
+        except (tk.TclError, ValueError):
+            ls = 48
+        pad = max(1, int(round(ls * 4 / 48)))
+        edge = max(pad + 2, ls - pad - 1)
+        ow = max(1, int(round(2 * ls / 48)))
         self._light_shape_id = c.create_oval(
-            4, 4, 40, 40, fill="#cc0000", outline="#660000", width=2
+            pad, pad, edge, edge, fill="#cc0000", outline="#660000", width=ow
         )
 
     def _rebuild_square(self) -> None:
@@ -356,8 +374,15 @@ class RecordingOverlay:
         if c is None:
             return
         c.delete("all")
+        try:
+            ls = int(float(c.cget("width")))
+        except (tk.TclError, ValueError):
+            ls = 48
+        pad = max(1, int(round(ls * 4 / 48)))
+        edge = max(pad + 2, ls - pad - 1)
+        ow = max(1, int(round(2 * ls / 48)))
         self._light_shape_id = c.create_rectangle(
-            4, 4, 40, 40, fill="#cc0000", outline="#660000", width=2
+            pad, pad, edge, edge, fill="#cc0000", outline="#660000", width=ow
         )
 
     def _show_canvas_layer(self) -> None:
@@ -376,7 +401,12 @@ class RecordingOverlay:
             self._canvas.pack_forget()
         except tk.TclError:
             pass
-        self._body_inner.pack(fill="both", expand=True, padx=14, pady=12)
+        self._body_inner.pack(
+            fill="both",
+            expand=True,
+            padx=max(6, self._ov_px(14)),
+            pady=max(4, self._ov_px(12)),
+        )
 
     def _ensure_light_packed(self) -> None:
         if self._light_canvas is None or self._text_col is None:
@@ -384,7 +414,11 @@ class RecordingOverlay:
         try:
             self._light_canvas.pack_info()
         except tk.TclError:
-            self._light_canvas.pack(side="left", padx=(0, 12), before=self._text_col)
+            self._light_canvas.pack(
+                side="left",
+                padx=(0, max(4, self._ov_px(12))),
+                before=self._text_col,
+            )
 
     def _build_canvas_items(self, base_photo: ImageTk.PhotoImage) -> None:
         if self._canvas is None:
@@ -513,7 +547,7 @@ class RecordingOverlay:
                 self._main_label.pack(side="top", anchor="w", pady=(6, 0))
             if self._main_label is not None:
                 self._main_label.configure(
-                    font=("Arial", 26, "bold"),
+                    font=("Arial", self._ov_font_pt(26), "bold"),
                     justify="left",
                 )
             self._update_countdown_label()
@@ -653,7 +687,7 @@ class RecordingOverlay:
                 self._main_label.pack_forget()
                 self._main_label.configure(
                     text=self._settings.recording_ended_message,
-                    font=("Arial", 16, "bold"),
+                    font=("Arial", self._ov_font_pt(16), "bold"),
                     justify="center",
                 )
                 self._main_label.pack(side="top", anchor="w", fill="x", expand=True)
@@ -703,14 +737,14 @@ class RecordingOverlay:
                     self._light_canvas.pack_forget()
                 except tk.TclError:
                     _LOG.debug("Recording light pack_forget failed", exc_info=True)
-            wrap = self._settings.recording_overlay_width - 100
+            wrap = max(120, self._ov_w() - self._ov_px(100))
             if self._header_label is not None:
                 self._header_label.pack_forget()
             if self._main_label is not None:
                 self._main_label.pack_forget()
                 self._main_label.configure(
                     text=self._settings.recording_session_end_message,
-                    font=("Arial", 14, "bold"),
+                    font=("Arial", self._ov_font_pt(14), "bold"),
                     justify="left",
                     wraplength=wrap,
                     anchor="w",

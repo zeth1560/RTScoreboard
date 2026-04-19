@@ -74,8 +74,9 @@ class ReplayBufferLoadingOverlay:
             return
 
         photos: list[ImageTk.PhotoImage] = []
+        sc = self._settings.aux_overlay_display_scale
         for p in paths:
-            photo = _path_to_rgb_photo(p)
+            photo = _path_to_rgb_photo(p, sc)
             if photo is None:
                 _LOG.error("Replay buffer loading: failed to load %s", p)
                 return
@@ -271,11 +272,17 @@ class ReplayBufferLoadingOverlay:
         self._photos.clear()
 
 
-def _path_to_rgb_photo(path: str) -> ImageTk.PhotoImage | None:
+def _path_to_rgb_photo(path: str, display_scale: float = 1.0) -> ImageTk.PhotoImage | None:
     """Flatten RGBA onto black so Tk does less alpha blending when swapping PhotoImages."""
     try:
         with Image.open(path) as im:
             rgba = im.convert("RGBA")
+        scale = float(display_scale)
+        if scale != 1.0:
+            tw = max(1, int(round(rgba.width * scale)))
+            th = max(1, int(round(rgba.height * scale)))
+            if (tw, th) != rgba.size:
+                rgba = rgba.resize((tw, th), Image.Resampling.LANCZOS)
         rgb = Image.new("RGB", rgba.size, (0, 0, 0))
         rgb.paste(rgba, mask=rgba.split()[3])
         return ImageTk.PhotoImage(rgb)

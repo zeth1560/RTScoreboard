@@ -112,8 +112,9 @@ class EncoderStatusOverlay:
         self._hidden_for_recording = False
 
     def _preload_images(self) -> bool:
-        pr = _path_to_rgb_photo(self._settings.encoder_status_ready_image)
-        pu = _path_to_rgb_photo(self._settings.encoder_status_unavailable_image)
+        sc = self._settings.aux_overlay_display_scale
+        pr = _path_to_rgb_photo(self._settings.encoder_status_ready_image, sc)
+        pu = _path_to_rgb_photo(self._settings.encoder_status_unavailable_image, sc)
         if pr is None or pu is None:
             return False
         self._photo_ready = pr
@@ -238,13 +239,19 @@ class EncoderStatusOverlay:
             pass
 
 
-def _path_to_rgb_photo(path: str) -> ImageTk.PhotoImage | None:
+def _path_to_rgb_photo(path: str, display_scale: float = 1.0) -> ImageTk.PhotoImage | None:
     try:
         p = Path(path)
         if not p.is_file():
             return None
         with Image.open(p) as im:
             rgba = im.convert("RGBA")
+        scale = float(display_scale)
+        if scale != 1.0:
+            tw = max(1, int(round(rgba.width * scale)))
+            th = max(1, int(round(rgba.height * scale)))
+            if (tw, th) != rgba.size:
+                rgba = rgba.resize((tw, th), Image.Resampling.LANCZOS)
         rgb = Image.new("RGB", rgba.size, (0, 0, 0))
         rgb.paste(rgba, mask=rgba.split()[3])
         return ImageTk.PhotoImage(rgb)

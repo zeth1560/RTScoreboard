@@ -175,6 +175,7 @@ class ScoreboardApp:
             lift_recording_overlay=self.recording_overlay.lift,
             reclaim_keyboard_focus=lambda: self.claim_keyboard_focus(
                 reason="screensaver_periodic",
+                topmost_hold_ms=self.settings.focus_topmost_hold_ms,
             ),
             on_stopped=lambda: self.rearm_focus_watchdog_after_transition(
                 "screensaver_stopped",
@@ -485,7 +486,18 @@ class ScoreboardApp:
             lambda e: self.on_streamdeck_input(lambda: self.update_score("b", -1)),
         )
         root.bind_all("r", lambda e, k="r": self._on_obs_restart_chord_key(k, e))
-        root.bind_all("i", lambda e: self.on_streamdeck_input(self.toggle_replay))
+        bind_recording_hotkey_global(
+            root,
+            self.settings.replay_start_hotkey,
+            "i",
+            lambda e: self.on_streamdeck_input(self.start_instant_replay),
+        )
+        bind_recording_hotkey_global(
+            root,
+            self.settings.replay_stop_hotkey,
+            "Ctrl+Alt+e",
+            lambda e: self.on_streamdeck_input(self.stop_instant_replay),
+        )
         bind_recording_hotkey(
             root,
             self.settings.recording_start_hotkey,
@@ -723,15 +735,21 @@ class ScoreboardApp:
             self.rearm_focus_watchdog_after_transition("black_screen_off")
         self.recording_overlay.lift()
 
-    def schedule_claim_focus(self) -> None:
+    def schedule_claim_focus(self, *, topmost_hold_ms: int | None = None) -> None:
+        hold = (
+            self.settings.focus_topmost_hold_ms
+            if topmost_hold_ms is None
+            else topmost_hold_ms
+        )
         for jid in self._focus_claim_jobs:
             self.scheduler.cancel(jid)
         self._focus_claim_jobs.clear()
         for delay_ms in (0, 50, 150, 400, 800, 1500, 3000, 6000, 12000, 20000):
             jid = self.scheduler.schedule(
                 delay_ms,
-                lambda ms=delay_ms: self.claim_keyboard_focus(
+                lambda ms=delay_ms, th=hold: self.claim_keyboard_focus(
                     reason=f"startup_claim_{ms}ms",
+                    topmost_hold_ms=th,
                 ),
                 name=f"focus_claim_{delay_ms}ms",
             )
@@ -751,7 +769,13 @@ class ScoreboardApp:
             self.settings.focus_watchdog_interval_ms,
         )
         self.start_focus_watchdog()
-        self.schedule_claim_focus()
+        # Post-screensaver: extra-long hold; other transitions use routine FOCUS_TOPMOST_MS.
+        topmost_hold = (
+            self.settings.screensaver_exit_topmost_hold_ms
+            if event == "screensaver_stopped"
+            else self.settings.focus_topmost_hold_ms
+        )
+        self.schedule_claim_focus(topmost_hold_ms=topmost_hold)
 
     def _focus_keyboard_seems_on_app(self) -> bool:
         w = self.root.focus_get()
@@ -780,7 +804,12 @@ class ScoreboardApp:
             return False
         return True
 
-    def claim_keyboard_focus(self, *, reason: str = "unspecified") -> None:
+    def claim_keyboard_focus(
+        self,
+        *,
+        reason: str = "unspecified",
+        topmost_hold_ms: int = 150,
+    ) -> None:
         if not self._focus_reclaim_eligible():
             _LOG.debug("Focus reclaim skipped (reason=%s): ineligible context", reason)
             return
@@ -795,8 +824,9 @@ class ScoreboardApp:
             if not self.recording_overlay.is_ui_active():
                 self.root.attributes("-topmost", True)
                 self.scheduler.cancel(self._release_topmost_job)
+                hold = max(50, int(topmost_hold_ms))
                 self._release_topmost_job = self.scheduler.schedule(
-                    150,
+                    hold,
                     self._release_topmost_brief,
                     name="focus_release_topmost",
                 )
@@ -870,20 +900,22 @@ class ScoreboardApp:
     def focus_watchdog_tick(self) -> None:
         self._focus_watchdog_job = None
 
-        if self.focus_watchdog_ticks_left <= 0:
-            if not self._focus_watchdog_exhausted_logged:
-                self._focus_watchdog_exhausted_logged = True
-                _LOG.info(
-                    "Focus watchdog: initial reclaim phase finished after %s ticks "
-                    "(no further periodic focus reclaim; manual input / restarts still apply)",
-                    self.settings.focus_watchdog_ticks,
-                )
-            return
-
-        self.focus_watchdog_ticks_left -= 1
+        if self.focus_watchdog_ticks_left > 0:
+            self.focus_watchdog_ticks_left -= 1
+        elif not self._focus_watchdog_exhausted_logged:
+            self._focus_watchdog_exhausted_logged = True
+            _LOG.info(
+                "Focus watchdog: initial %s-tick phase done; continuing every %sms so "
+                "other apps (encoder/OBS) cannot stay on top indefinitely",
+                self.settings.focus_watchdog_ticks,
+                self.settings.focus_watchdog_interval_ms,
+            )
 
         if self._focus_reclaim_eligible():
-            self.claim_keyboard_focus(reason="watchdog")
+            self.claim_keyboard_focus(
+                reason="watchdog",
+                topmost_hold_ms=self.settings.focus_topmost_hold_ms,
+            )
 
         self._focus_watchdog_job = self.scheduler.schedule(
             self.settings.focus_watchdog_interval_ms,
@@ -930,6 +962,7 @@ class ScoreboardApp:
             )
             self.claim_keyboard_focus(
                 reason=f"after_synthetic_click_{self._synthetic_click_attempts}",
+                topmost_hold_ms=self.settings.focus_topmost_hold_ms,
             )
         except (tk.TclError, ValueError, TypeError):
             _LOG.debug("Synthetic focus click failed", exc_info=True)
@@ -1078,9 +1111,10 @@ class ScoreboardApp:
         return items
 
     def _sync_canvas_aux_overlays(self) -> None:
-        """Keep encoder + replay-buffer canvas strips above the transparent overlay."""
+        """Keep encoder + replay-buffer strips + replay-unavailable graphic above the transparent overlay."""
         self._encoder_status_overlay.sync_canvas_stack()
         self._replay_buffer_loading.sync_canvas_stack()
+        self.replay.sync_replay_unavailable_canvas_stack()
 
     def draw_scores(self) -> None:
         self.canvas.delete("score")
@@ -1125,14 +1159,23 @@ class ScoreboardApp:
         self.draw_scores()
         self.save_state()
 
-    def toggle_replay(self) -> None:
-        if self.replay.dismiss_replay_unavailable_overlay():
-            return
+    def start_instant_replay(self) -> None:
+        """REPLAY_START_HOTKEY: enter instant replay from idle only (separate from stop)."""
         if not self.settings.replay_enabled:
-            _LOG.info("Replay hotkey ignored: REPLAY_ENABLED=0")
+            _LOG.info("Replay start ignored: REPLAY_ENABLED=0")
             return
         self.screensaver.stop()
-        self.replay.toggle_replay()
+        self.replay.start_replay_session()
+
+    def stop_instant_replay(self) -> None:
+        """REPLAY_STOP_HOTKEY (default Ctrl+Alt+e): dismiss failure graphic or stop video/slate."""
+        if not self.settings.replay_enabled:
+            _LOG.info("Replay stop ignored: REPLAY_ENABLED=0")
+            return
+        self.screensaver.stop()
+        if self.replay.dismiss_replay_unavailable_overlay():
+            return
+        self.replay.stop_replay_session()
 
     def start_replay_buffer_loading_overlay(self) -> None:
         self._replay_buffer_loading.start_sequence()

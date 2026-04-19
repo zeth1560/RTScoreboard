@@ -31,7 +31,10 @@ REPLAY_UNAVAILABLE_USER_MESSAGE = (
     "this doohickey next time."
 )
 
-_REPLAY_UNAVAILABLE_TOAST_MS = 15_000
+# Share main canvas with the scoreboard (Toplevels tend to flash under Windows DWM on repaint).
+_REPLAY_UNAVAIL_CANVAS_TAG = "replay_unavailable"
+# Relative to "fit entire image on screen" scale (centered, letterboxed by transparent overlay).
+_REPLAY_UNAVAILABLE_DISPLAY_SCALE = 0.5
 
 
 class ReplayPhase(enum.Enum):
@@ -102,9 +105,7 @@ class ReplayController:
         self._fade_anim_delay_ms = 0
         self._fade_on_complete: Callable[[], None] | None = None
 
-        self._replay_toast_win: tk.Toplevel | None = None
-        self._replay_toast_photo: ImageTk.PhotoImage | None = None
-        self._replay_toast_dismiss_job: str | None = None
+        self._replay_unavail_photo: ImageTk.PhotoImage | None = None
         self._last_replayed_file_mtime: float | None = None
         self._replay_pending_mtime: float | None = None
 
@@ -190,7 +191,7 @@ class ReplayController:
         self.cancel_transition_timeout()
         self.cancel_slate_stuck_watchdog()
 
-    def _apply_idle_scoreboard_state(self, reason: str) -> None:
+    def _apply_idle_scoreboard_state(self, reason: str, *, run_after_hook: bool = True) -> None:
         """Transparent overlay, scores visible, replay flags IDLE — shared finalize path."""
         self.hide_video_host()
         # Switch the canvas overlay to transparent *before* draw_scores / aux sync so the
@@ -215,10 +216,11 @@ class ReplayController:
         self._is_transitioning = False
         self._set_phase(ReplayPhase.IDLE)
         self._cleanup_mpv_input_conf()
-        try:
-            self._after_replay_fade_out()
-        except Exception:
-            _LOG.exception("Replay restore: after_replay_fade_out failed (reason=%s)", reason)
+        if run_after_hook:
+            try:
+                self._after_replay_fade_out()
+            except Exception:
+                _LOG.exception("Replay restore: after_replay_fade_out failed (reason=%s)", reason)
 
     def restore_normal_scoreboard_state(self, reason: str, *, log_level: int = logging.WARNING) -> None:
         """
@@ -229,8 +231,19 @@ class ReplayController:
         self._replay_pending_mtime = None
         self._cancel_all_replay_timers()
         self.stop_replay_video_process()
-        self._apply_idle_scoreboard_state(reason)
+        self._apply_idle_scoreboard_state(reason, run_after_hook=True)
         _LOG.info("Replay: scoreboard restored to normal mode (reason=%s)", reason)
+
+    def _snap_idle_for_replay_unavailable(self, reason: str, *, log_level: int = logging.INFO) -> None:
+        """Cancel replay work and show the scoreboard under the unavailable graphic.
+
+        Skips ``_after_replay_fade_out`` so this is not treated as a normal replay exit transition.
+        """
+        _LOG.log(log_level, "Replay: idle snap for unavailable graphic (reason=%s)", reason)
+        self._replay_pending_mtime = None
+        self._cancel_all_replay_timers()
+        self.stop_replay_video_process()
+        self._apply_idle_scoreboard_state(reason, run_after_hook=False)
 
     def _present_slate_after_mpv_stopped(self) -> None:
         """Shared canvas restore when mpv exits or operator stops video (hold slate before fade-out)."""
@@ -274,11 +287,11 @@ class ReplayController:
             phase_label,
             self._settings.replay_transition_timeout_ms,
         )
-        self._show_replay_unavailable_toast()
-        self.restore_normal_scoreboard_state(
+        self._snap_idle_for_replay_unavailable(
             f"transition_timeout:{phase_label}",
             log_level=logging.ERROR,
         )
+        self._show_replay_unavailable_toast()
 
     def _schedule_slate_stuck_watchdog(self) -> None:
         self.cancel_slate_stuck_watchdog()
@@ -303,8 +316,8 @@ class ReplayController:
             self._settings.replay_video_start_delay_ms
             + self._settings.replay_slate_stuck_timeout_ms,
         )
+        self._snap_idle_for_replay_unavailable("slate_stuck_no_video", log_level=logging.ERROR)
         self._show_replay_unavailable_toast()
-        self.restore_normal_scoreboard_state("slate_stuck_no_video", log_level=logging.ERROR)
 
     def teardown(self) -> None:
         _LOG.info("Replay: teardown")
@@ -335,26 +348,32 @@ class ReplayController:
             _LOG.debug("Replay teardown: overlay reset skipped", exc_info=True)
         self._cleanup_mpv_input_conf()
 
-    def _dismiss_replay_unavailable_toast(self) -> None:
-        self._scheduler.cancel(self._replay_toast_dismiss_job)
-        self._replay_toast_dismiss_job = None
-        self._replay_toast_photo = None
-        if self._replay_toast_win is not None:
-            try:
-                self._replay_toast_win.destroy()
-            except tk.TclError:
-                pass
-            self._replay_toast_win = None
+    def sync_replay_unavailable_canvas_stack(self) -> None:
+        """Keep the unavailable graphic above the transparent overlay and auxiliary strips."""
+        if not self._canvas.find_withtag(_REPLAY_UNAVAIL_CANVAS_TAG):
+            return
+        try:
+            for ref in (self._overlay_canvas_id, "encoder_status", "replay_buffer_loading"):
+                try:
+                    self._canvas.tag_raise(_REPLAY_UNAVAIL_CANVAS_TAG, ref)
+                except tk.TclError:
+                    pass
+        except tk.TclError:
+            _LOG.debug("replay unavailable: tag_raise failed", exc_info=True)
 
-    def _renew_replay_unavailable_toast_timeout(self) -> None:
-        self._scheduler.cancel(self._replay_toast_dismiss_job)
-        # Keep the unavailable graphic solidly visible until operator dismisses (hotkey "i").
-        # This avoids periodic hide/show blinking under repeated failure conditions.
-        self._replay_toast_dismiss_job = None
+    def _dismiss_replay_unavailable_toast(self) -> None:
+        try:
+            self._canvas.delete(_REPLAY_UNAVAIL_CANVAS_TAG)
+        except tk.TclError:
+            pass
+        self._replay_unavail_photo = None
 
     def dismiss_replay_unavailable_overlay(self) -> bool:
-        """If the fullscreen unavailable graphic is up, dismiss it (replay hotkey ``i``)."""
-        if self._replay_toast_win is None:
+        """Remove only the unavailable canvas graphic.
+
+        Replay is already snapped idle when this graphic was shown; no fade-out or extra restore.
+        """
+        if not self._canvas.find_withtag(_REPLAY_UNAVAIL_CANVAS_TAG):
             return False
         self._dismiss_replay_unavailable_toast()
         return True
@@ -374,7 +393,8 @@ class ReplayController:
             with Image.open(path) as img:
                 rgba = img.convert("RGBA")
                 iw, ih = rgba.size
-                scale = min(sw / iw, sh / ih)
+                fit = min(sw / iw, sh / ih)
+                scale = fit * _REPLAY_UNAVAILABLE_DISPLAY_SCALE
                 nw = max(1, int(iw * scale))
                 nh = max(1, int(ih * scale))
                 if (nw, nh) != (iw, ih):
@@ -386,119 +406,105 @@ class ReplayController:
             return None
 
     def _show_replay_unavailable_toast(self) -> None:
-        """Fullscreen graphic (replay failure, OBS gate failure, etc.); 15s or hotkey ``i``."""
-        if self._replay_toast_win is not None:
+        """Centered graphic on the main canvas; dismiss via mpv exit hotkey / replay stop / ``i`` when wired in app."""
+        if self._canvas.find_withtag(_REPLAY_UNAVAIL_CANVAS_TAG):
+            self._raise_fullscreen_overlay()
             try:
-                self._replay_toast_win.lift()
-            except tk.TclError:
-                _LOG.debug("replay unavailable lift failed", exc_info=True)
-            self._renew_replay_unavailable_toast_timeout()
+                self._lift_recording_overlay()
+            except Exception:
+                _LOG.debug("replay unavailable lift_recording_overlay failed", exc_info=True)
             return
         sw = max(1, self._root.winfo_screenwidth())
         sh = max(1, self._root.winfo_screenheight())
         try:
-            win = tk.Toplevel(self._root)
-            win.overrideredirect(True)
-            try:
-                win.attributes("-topmost", True)
-            except tk.TclError:
-                _LOG.debug("replay unavailable topmost failed", exc_info=True)
-            win.configure(bg="black", cursor="none")
-
-            def _dismiss_ev(_e: tk.Event | None = None) -> str:
-                self._dismiss_replay_unavailable_toast()
-                return "break"
-
-            win.bind("<KeyPress-i>", _dismiss_ev)
-            win.bind("<KeyPress-I>", _dismiss_ev)
-
             built = self._try_build_replay_unavailable_photo()
             if built is not None:
-                photo, nw, nh = built
-                self._replay_toast_photo = photo
-                canvas = tk.Canvas(
-                    win,
-                    width=nw,
-                    height=nh,
-                    highlightthickness=0,
-                    bg="black",
-                    cursor="none",
+                photo, _nw, _nh = built
+                self._replay_unavail_photo = photo
+                self._canvas.create_image(
+                    sw // 2,
+                    sh // 2,
+                    anchor="center",
+                    image=photo,
+                    tags=_REPLAY_UNAVAIL_CANVAS_TAG,
                 )
-                canvas.pack(fill="both", expand=True)
-                canvas.bind("<KeyPress-i>", _dismiss_ev)
-                canvas.bind("<KeyPress-I>", _dismiss_ev)
-                canvas.create_image(0, 0, anchor="nw", image=photo)
-                x = (sw - nw) // 2
-                y = (sh - nh) // 2
-                win.geometry(f"{nw}x{nh}+{x}+{y}")
             else:
                 wrap = min(960, max(320, sw - 120))
-                frame = tk.Frame(win, bg="#1a1a1a", highlightthickness=0)
-                frame.pack(fill="both", expand=True)
-                tk.Label(
-                    frame,
+                self._canvas.create_text(
+                    sw // 2,
+                    sh // 2,
                     text=REPLAY_UNAVAILABLE_USER_MESSAGE,
-                    fg="#f0f0f0",
-                    bg="#1a1a1a",
+                    fill="#f0f0f0",
                     font=("Arial", 14),
+                    width=wrap,
                     justify="center",
-                    wraplength=wrap,
-                    padx=26,
-                    pady=20,
-                ).pack(expand=True)
-                frame.bind("<KeyPress-i>", _dismiss_ev)
-                frame.bind("<KeyPress-I>", _dismiss_ev)
-                win.update_idletasks()
-                fw = max(1, win.winfo_reqwidth())
-                fh = max(1, win.winfo_reqheight())
-                x = (sw - fw) // 2
-                y = (sh - fh) // 2
-                win.geometry(f"{fw}x{fh}+{x}+{y}")
-
-            try:
-                win.focus_force()
-            except tk.TclError:
-                _LOG.debug("replay unavailable focus_force failed", exc_info=True)
+                    tags=_REPLAY_UNAVAIL_CANVAS_TAG,
+                )
         except tk.TclError:
             _LOG.debug("replay unavailable overlay failed", exc_info=True)
             return
 
-        self._replay_toast_win = win
-        self._renew_replay_unavailable_toast_timeout()
+        self._raise_fullscreen_overlay()
+        try:
+            self._lift_recording_overlay()
+        except Exception:
+            _LOG.debug("replay unavailable lift_recording_overlay failed", exc_info=True)
 
     def _commit_replay_file_played(self) -> None:
         if self._replay_pending_mtime is not None:
             self._last_replayed_file_mtime = self._replay_pending_mtime
             self._replay_pending_mtime = None
 
-    def toggle_replay(self) -> None:
+    def start_replay_session(self) -> None:
+        """Begin instant replay (fade to slate) from idle — not a toggle; use ``stop_replay_session`` to exit."""
         if not self._settings.replay_enabled:
-            _LOG.info("Replay: toggle ignored (REPLAY_ENABLED=0)")
+            _LOG.info("Replay: start ignored (REPLAY_ENABLED=0)")
+            return
+        if self._canvas.find_withtag(_REPLAY_UNAVAIL_CANVAS_TAG):
+            _LOG.info(
+                "Replay: start ignored (failure graphic visible; press %s to dismiss)",
+                self._settings.replay_stop_hotkey,
+            )
             return
         if self._is_transitioning:
             _LOG.info(
-                "Replay: toggle ignored (transition in progress phase=%s)",
+                "Replay: start ignored (transition in progress phase=%s)",
                 self._phase.name,
             )
             return
+        if self._replay_video_active or self._showing_replay:
+            _LOG.info(
+                "Replay: start ignored (replay already active; press %s to stop)",
+                self._settings.replay_stop_hotkey,
+            )
+            return
+        _LOG.info("Replay: start (fade in to slate)")
+        self._fade_overlay_in()
 
+    def stop_replay_session(self) -> None:
+        """End replay: stop mpv / fade out slate. Does not remove the failure graphic — app calls dismiss first."""
+        if not self._settings.replay_enabled:
+            _LOG.info("Replay: stop ignored (REPLAY_ENABLED=0)")
+            return
+        if self._is_transitioning:
+            _LOG.info(
+                "Replay: stop ignored (transition in progress phase=%s)",
+                self._phase.name,
+            )
+            return
         _LOG.info(
-            "Replay: toggle requested showing=%s video_active=%s phase=%s",
+            "Replay: stop showing=%s video_active=%s phase=%s",
             self._showing_replay,
             self._replay_video_active,
             self._phase.name,
         )
-
         if self._replay_video_active:
             self.stop_replay_video_and_return()
             return
-
         if self._showing_replay:
             self.cancel_replay_video_launch()
             self.cancel_return_slate()
             self._fade_overlay_out()
-        else:
-            self._fade_overlay_in()
 
     def _fade_overlay_in(self) -> None:
         if self._phase != ReplayPhase.IDLE:
@@ -724,8 +730,8 @@ class ReplayController:
             _LOG.warning("Replay unavailable: no fresh replay file detected")
             self._notify_obs_instant_replay_unavailable_async("missing_file")
             self._request_launcher_obs_restart_async("missing_file")
+            self._snap_idle_for_replay_unavailable("missing_video_file", log_level=logging.WARNING)
             self._show_replay_unavailable_toast()
-            self.restore_normal_scoreboard_state("missing_video_file", log_level=logging.WARNING)
             return
 
         if size_bytes == 0:
@@ -734,8 +740,8 @@ class ReplayController:
             )
             self._notify_obs_instant_replay_unavailable_async("empty_file")
             self._request_launcher_obs_restart_async("empty_file")
+            self._snap_idle_for_replay_unavailable("replay_file_empty", log_level=logging.WARNING)
             self._show_replay_unavailable_toast()
-            self.restore_normal_scoreboard_state("replay_file_empty", log_level=logging.WARNING)
             return
 
         max_age = self._settings.replay_file_max_age_seconds
@@ -748,8 +754,8 @@ class ReplayController:
             )
             self._notify_obs_instant_replay_unavailable_async("stale_file")
             self._request_launcher_obs_restart_async("stale_file")
+            self._snap_idle_for_replay_unavailable("replay_file_stale", log_level=logging.WARNING)
             self._show_replay_unavailable_toast()
-            self.restore_normal_scoreboard_state("replay_file_stale", log_level=logging.WARNING)
             return
 
         if (
@@ -769,16 +775,16 @@ class ReplayController:
         if mpv_executable is None:
             _LOG.error("Replay: launch failed — mpv not found")
             self._replay_pending_mtime = None
+            self._snap_idle_for_replay_unavailable("mpv_not_found", log_level=logging.ERROR)
             self._show_replay_unavailable_toast()
-            self.restore_normal_scoreboard_state("mpv_not_found", log_level=logging.ERROR)
             return
 
         input_conf_path = self._ensure_mpv_input_conf()
         if input_conf_path is None:
             _LOG.error("Replay: launch failed — could not write mpv input conf")
             self._replay_pending_mtime = None
+            self._snap_idle_for_replay_unavailable("mpv_input_conf_failed", log_level=logging.ERROR)
             self._show_replay_unavailable_toast()
-            self.restore_normal_scoreboard_state("mpv_input_conf_failed", log_level=logging.ERROR)
             return
 
         _LOG.info("Replay: launching mpv executable=%s video=%s", mpv_executable, path)
@@ -914,8 +920,8 @@ class ReplayController:
             _LOG.exception("Replay: mpv spawn failed (fullscreen); restoring scoreboard")
             self._replay_video_process = None
             self._replay_pending_mtime = None
+            self._snap_idle_for_replay_unavailable("mpv_spawn_failed_fullscreen", log_level=logging.ERROR)
             self._show_replay_unavailable_toast()
-            self.restore_normal_scoreboard_state("mpv_spawn_failed_fullscreen", log_level=logging.ERROR)
             return
 
         self.cancel_slate_stuck_watchdog()
@@ -957,8 +963,8 @@ class ReplayController:
             self._replay_video_process = None
             self._replay_pending_mtime = None
             self.hide_video_host()
+            self._snap_idle_for_replay_unavailable("mpv_spawn_failed_embedded", log_level=logging.ERROR)
             self._show_replay_unavailable_toast()
-            self.restore_normal_scoreboard_state("mpv_spawn_failed_embedded", log_level=logging.ERROR)
             return
 
         self.cancel_slate_stuck_watchdog()
@@ -1068,6 +1074,7 @@ class ReplayController:
 
     def stop_replay_video_and_return(self) -> None:
         _LOG.info("Replay: operator stopped video (return to slate)")
+        self._dismiss_replay_unavailable_toast()
         self.cancel_return_slate()
         self.cancel_replay_video_launch()
         self.cancel_replay_video_poll()
@@ -1171,6 +1178,7 @@ class ReplayController:
             _LOG.info("Replay: mpv process exited pid=%s code=%s", process.pid, code)
         self._replay_video_process = None
         self._replay_video_active = False
+        self._dismiss_replay_unavailable_toast()
 
         if self._showing_replay and not self._is_transitioning:
             self._present_slate_after_mpv_stopped()

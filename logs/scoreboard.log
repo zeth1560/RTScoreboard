@@ -19439,3 +19439,2843 @@ focus_watchdog_interval_ms=3000
 2026-04-18 08:58:58 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
 2026-04-18 08:59:03 INFO [scoreboard.app] Application shutdown requested
 2026-04-18 08:59:03 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 09:21:38 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+2026-04-18 09:21:38 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 09:21:38 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 4-2
+2026-04-18 09:21:39 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 09:21:39 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 09:21:42 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=66496); follow-up reclaim
+2026-04-18 09:21:42 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 09:21:45 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=66496); follow-up reclaim
+2026-04-18 09:21:45 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 09:21:51 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=66496); follow-up reclaim
+2026-04-18 09:21:51 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 09:24:53 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 09:24:53 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 09:24:53 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 09:25:12 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+2026-04-18 09:25:12 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 09:25:12 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 4-2
+2026-04-18 09:25:12 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 09:25:12 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 09:25:15 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=327798); follow-up reclaim
+2026-04-18 09:25:15 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 09:25:18 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=327798); follow-up reclaim
+2026-04-18 09:25:18 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 09:25:24 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=327798); follow-up reclaim
+2026-04-18 09:25:24 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 09:37:46 INFO [scoreboard.app] Focus watchdog: initial reclaim phase finished after 250 ticks (no further periodic focus reclaim; manual input / restarts still apply)
+2026-04-18 09:55:17 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-18 09:55:17 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-18 09:55:55 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-18 09:55:55 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 09:55:55 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 09:56:26 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 09:56:26 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 09:56:26 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 10:00:15 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+2026-04-18 10:00:15 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 10:00:15 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-2
+2026-04-18 10:00:15 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 10:00:15 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 10:00:18 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=1179884); follow-up reclaim
+2026-04-18 10:00:18 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:00:21 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=1179884); follow-up reclaim
+2026-04-18 10:00:21 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:00:27 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=1179884); follow-up reclaim
+2026-04-18 10:00:27 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:01:15 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:01:15 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:01:15 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:01:15 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:01:15 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:01:15 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:01:20 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:01:20 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=3770 max=120)
+2026-04-18 10:01:20 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-18 10:01:20 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:01:20 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-18 10:01:21 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:01:29 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 10:01:29 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 10:01:29 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 10:04:50 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+2026-04-18 10:04:50 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 10:04:50 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-2
+2026-04-18 10:04:50 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 10:04:50 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 10:04:53 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=329334); follow-up reclaim
+2026-04-18 10:04:53 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:04:54 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:04:54 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:04:54 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:04:55 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:04:55 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:04:55 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:04:57 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 10:05:00 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:05:00 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=3989 max=120)
+2026-04-18 10:05:00 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-18 10:05:00 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:05:00 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-18 10:05:00 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:05:02 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=329334); follow-up reclaim
+2026-04-18 10:05:02 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:05:36 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 10:05:36 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 10:05:36 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 10:08:36 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+2026-04-18 10:08:36 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 10:08:36 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 1-2
+2026-04-18 10:08:36 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 10:08:36 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 10:08:39 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=198194); follow-up reclaim
+2026-04-18 10:08:39 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:08:42 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=198194); follow-up reclaim
+2026-04-18 10:08:42 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:08:48 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=198194); follow-up reclaim
+2026-04-18 10:08:48 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:08:49 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:08:49 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:08:49 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:08:50 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:08:50 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:08:50 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:08:55 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:08:55 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=4224 max=120)
+2026-04-18 10:08:55 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-18 10:08:55 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:08:55 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-18 10:08:55 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:09:10 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:09:10 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:09:10 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:09:11 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:09:11 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:09:11 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:09:13 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 10:09:16 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:09:16 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=4245 max=120)
+2026-04-18 10:09:16 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-18 10:09:16 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:09:16 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-18 10:09:16 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:09:23 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 10:09:23 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 10:09:23 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 10:11:38 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+2026-04-18 10:11:38 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 10:11:38 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 2-2
+2026-04-18 10:11:38 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 10:11:38 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 10:11:41 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=853556); follow-up reclaim
+2026-04-18 10:11:41 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:11:44 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=853556); follow-up reclaim
+2026-04-18 10:11:44 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:11:46 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:11:46 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:11:46 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:11:47 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:11:47 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:11:47 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:11:52 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:11:52 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=4401 max=120)
+2026-04-18 10:11:52 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-18 10:11:52 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:11:52 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-18 10:11:52 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:12:04 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:12:04 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:12:04 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:12:05 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:12:05 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:12:05 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:12:07 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 10:12:10 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:12:10 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=4419 max=120)
+2026-04-18 10:12:10 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-18 10:12:10 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:12:10 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-18 10:12:10 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:12:37 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 10:12:37 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 10:12:37 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 10:15:27 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+2026-04-18 10:15:27 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 10:15:27 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 2-2
+2026-04-18 10:15:27 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 10:15:27 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 10:15:30 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=198172); follow-up reclaim
+2026-04-18 10:15:30 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:15:33 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=198172); follow-up reclaim
+2026-04-18 10:15:33 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:15:33 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:15:33 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:15:33 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:15:34 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:15:34 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:15:34 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:15:39 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:15:39 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=4628 max=120)
+2026-04-18 10:15:39 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-18 10:15:39 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:15:39 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-18 10:15:39 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:15:39 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=198172); follow-up reclaim
+2026-04-18 10:15:39 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:15:44 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=operator_dismissed_replay_unavailable_graphic)
+2026-04-18 10:15:44 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:15:45 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:15:45 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:15:45 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:15:45 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:15:45 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:15:45 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:15:48 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 10:15:50 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:15:50 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=4640 max=120)
+2026-04-18 10:15:50 WARNING [scoreboard.replay_controller] Replay: restoring normal scoreboard (reason=replay_file_stale)
+2026-04-18 10:15:50 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:15:50 INFO [scoreboard.replay_controller] Replay: scoreboard restored to normal mode (reason=replay_file_stale)
+2026-04-18 10:15:51 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:15:54 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 10:15:54 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 10:15:54 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 10:18:22 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+2026-04-18 10:18:22 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 10:18:22 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 2-2
+2026-04-18 10:18:23 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 10:18:23 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 10:18:25 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=919086); follow-up reclaim
+2026-04-18 10:18:25 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:18:29 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=919086); follow-up reclaim
+2026-04-18 10:18:29 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:18:29 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:18:29 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:18:29 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:18:30 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:18:30 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:18:30 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:18:35 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:18:35 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=4804 max=120)
+2026-04-18 10:18:35 WARNING [scoreboard.replay_controller] Replay: idle snap for unavailable graphic (reason=replay_file_stale)
+2026-04-18 10:18:35 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:18:42 INFO [scoreboard.replay_controller] Replay: toggle requested showing=False video_active=False phase=IDLE
+2026-04-18 10:18:42 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:18:42 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:18:42 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:18:42 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:18:42 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:18:45 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 10:18:47 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:18:47 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=4817 max=120)
+2026-04-18 10:18:47 WARNING [scoreboard.replay_controller] Replay: idle snap for unavailable graphic (reason=replay_file_stale)
+2026-04-18 10:18:47 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:18:50 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 10:18:50 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 10:18:50 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 10:21:06 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-18 10:21:06 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 10:21:06 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 2-2
+2026-04-18 10:21:07 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 10:21:07 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 10:21:09 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=983844); follow-up reclaim
+2026-04-18 10:21:09 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:21:13 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=983844); follow-up reclaim
+2026-04-18 10:21:13 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:21:19 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=983844); follow-up reclaim
+2026-04-18 10:21:19 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 10:22:18 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-18 10:22:18 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:22:18 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:22:18 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:22:18 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:22:18 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:22:23 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58245571 mtime=2026-04-18T08:58:30
+2026-04-18 10:22:23 WARNING [scoreboard.replay_controller] Replay skipped: file exists but is stale (age_seconds=5033 max=120)
+2026-04-18 10:22:23 WARNING [scoreboard.replay_controller] Replay: idle snap for unavailable graphic (reason=replay_file_stale)
+2026-04-18 10:22:24 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> IDLE
+2026-04-18 10:22:29 INFO [scoreboard.replay_controller] Replay: stop showing=False video_active=False phase=IDLE
+2026-04-18 10:22:32 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 10:23:09 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-18 10:23:09 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 10:23:09 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 10:23:10 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 10:23:10 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 10:23:10 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 10:23:15 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=56531923 mtime=2026-04-18T10:23:07
+2026-04-18 10:23:15 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=7 size_bytes=56531923
+2026-04-18 10:23:15 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-18 10:23:16 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=7568
+2026-04-18 10:23:16 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-18 10:23:33 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=7568 code=0
+2026-04-18 10:23:33 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-18 10:23:33 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-18 10:23:34 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-18 10:23:34 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-18 10:23:34 INFO [scoreboard.replay_controller] Replay: stop ignored (transition in progress phase=FADING_OUT)
+2026-04-18 10:23:35 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-18 10:23:35 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-18 10:23:35 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 10:23:37 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 10:36:09 INFO [scoreboard.app] Focus watchdog: initial reclaim phase finished after 250 ticks (no further periodic focus reclaim; manual input / restarts still apply)
+2026-04-18 10:53:47 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-18 10:53:47 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-18 11:16:35 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-18 11:16:35 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 11:16:35 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 11:16:51 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 11:16:51 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 11:16:51 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 11:34:16 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-18 11:34:16 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 11:34:16 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 4-5
+2026-04-18 11:34:17 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 11:34:17 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 11:34:20 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=66488); follow-up reclaim
+2026-04-18 11:34:20 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 11:34:23 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=66488); follow-up reclaim
+2026-04-18 11:34:23 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 11:34:29 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=66488); follow-up reclaim
+2026-04-18 11:34:29 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 11:35:12 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 11:35:12 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 11:35:12 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 11:36:14 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-18 11:36:14 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+2026-04-18 11:36:14 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-0
+2026-04-18 11:36:15 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 11:36:15 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 11:36:17 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=66448); follow-up reclaim
+2026-04-18 11:36:17 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 11:36:21 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=66448); follow-up reclaim
+2026-04-18 11:36:21 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 11:36:27 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=66448); follow-up reclaim
+2026-04-18 11:36:27 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 11:48:49 INFO [scoreboard.app] Focus watchdog: initial reclaim phase finished after 250 ticks (no further periodic focus reclaim; manual input / restarts still apply)
+2026-04-18 12:06:15 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-18 12:06:15 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-18 12:31:19 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-18 12:31:19 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 12:31:19 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 12:33:42 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 12:33:42 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 12:33:42 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 12:39:12 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-18 12:39:12 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+2026-04-18 12:39:12 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-0
+2026-04-18 12:39:12 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 12:39:12 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 12:39:15 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=722386); follow-up reclaim
+2026-04-18 12:39:15 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 12:39:18 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=722386); follow-up reclaim
+2026-04-18 12:39:18 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 12:39:24 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=722386); follow-up reclaim
+2026-04-18 12:39:24 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 12:51:46 INFO [scoreboard.app] Focus watchdog: initial reclaim phase finished after 250 ticks (no further periodic focus reclaim; manual input / restarts still apply)
+2026-04-18 13:06:38 INFO [scoreboard.app] Application shutdown requested
+2026-04-18 13:06:38 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-18 13:06:38 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-18 13:16:50 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-18 13:16:50 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+focus_topmost_hold_ms=3000
+2026-04-18 13:16:50 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 3-4
+2026-04-18 13:16:50 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 13:16:50 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-18 13:16:53 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=329222); follow-up reclaim
+2026-04-18 13:16:53 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 13:16:56 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=329222); follow-up reclaim
+2026-04-18 13:16:56 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 13:17:02 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=329222); follow-up reclaim
+2026-04-18 13:17:02 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-18 13:17:36 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-18 13:17:36 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 13:17:36 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 13:17:37 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 13:17:37 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 13:17:37 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 13:17:42 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58416260 mtime=2026-04-18T13:17:34
+2026-04-18 13:17:42 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=7 size_bytes=58416260
+2026-04-18 13:17:42 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-18 13:17:42 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=10648
+2026-04-18 13:17:42 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-18 13:17:49 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=10648 code=0
+2026-04-18 13:17:49 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-18 13:17:49 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-18 13:17:49 INFO [scoreboard.replay_controller] Replay: stop showing=True video_active=False phase=SLATE_VISIBLE
+2026-04-18 13:17:49 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-18 13:17:49 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-18 13:17:50 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-18 13:17:50 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-18 13:17:50 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 13:17:52 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 13:18:34 INFO [scoreboard.app] Recording overlay: countdown started (encoder capture active; C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-18 13:18:34 INFO [scoreboard.recording_overlay] Recording overlay widgets created
+2026-04-18 13:18:34 INFO [scoreboard.recording_overlay] Recording overlay: countdown started (max 20 min)
+2026-04-18 13:23:39 INFO [scoreboard.app] Recording overlay: encoder idle — hiding in-progress timer if shown (C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-18 13:23:39 INFO [scoreboard.recording_overlay] Recording overlay: hidden
+2026-04-18 13:24:50 INFO [scoreboard.app] Focus: re-arming watchdog after black_screen_off (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 13:24:56 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-18 13:24:56 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 13:24:56 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 13:24:57 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 13:24:57 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 13:24:57 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 13:25:02 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58534725 mtime=2026-04-18T13:24:54
+2026-04-18 13:25:02 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=7 size_bytes=58534725
+2026-04-18 13:25:02 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-18 13:25:02 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=4272
+2026-04-18 13:25:02 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-18 13:25:09 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=4272 code=0
+2026-04-18 13:25:09 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-18 13:25:09 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-18 13:25:09 INFO [scoreboard.replay_controller] Replay: stop showing=True video_active=False phase=SLATE_VISIBLE
+2026-04-18 13:25:09 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-18 13:25:09 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-18 13:25:10 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-18 13:25:10 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-18 13:25:10 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 13:25:12 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 13:26:13 INFO [scoreboard.app] Recording overlay: countdown started (encoder capture active; C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-18 13:26:13 INFO [scoreboard.recording_overlay] Recording overlay: countdown started (max 20 min)
+2026-04-18 13:28:51 INFO [scoreboard.app] Recording overlay: encoder idle — hiding in-progress timer if shown (C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-18 13:28:51 INFO [scoreboard.recording_overlay] Recording overlay: hidden
+2026-04-18 13:28:58 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-18 13:28:58 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-18 13:28:58 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-18 13:28:58 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-18 13:28:58 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-18 13:28:58 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-18 13:29:03 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=57538309 mtime=2026-04-18T13:28:56
+2026-04-18 13:29:03 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=7 size_bytes=57538309
+2026-04-18 13:29:03 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-18 13:29:03 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=2360
+2026-04-18 13:29:03 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-18 13:29:10 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=2360 code=0
+2026-04-18 13:29:10 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-18 13:29:10 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-18 13:29:11 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-18 13:29:11 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-18 13:29:11 INFO [scoreboard.replay_controller] Replay: stop ignored (transition in progress phase=FADING_OUT)
+2026-04-18 13:29:12 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-18 13:29:12 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-18 13:29:12 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 13:29:14 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-18 13:41:45 INFO [scoreboard.app] Focus watchdog: initial 250-tick phase done; continuing every 3000ms so other apps (encoder/OBS) cannot stay on top indefinitely
+2026-04-18 13:59:15 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-18 13:59:15 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-18 14:07:03 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-18 14:07:03 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 14:07:03 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 14:19:37 INFO [scoreboard.app] Focus watchdog: initial 250-tick phase done; continuing every 3000ms so other apps (encoder/OBS) cannot stay on top indefinitely
+2026-04-18 14:37:08 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-18 14:37:08 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-18 14:38:21 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-18 14:38:21 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 14:38:21 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 14:50:55 INFO [scoreboard.app] Focus watchdog: initial 250-tick phase done; continuing every 3000ms so other apps (encoder/OBS) cannot stay on top indefinitely
+2026-04-18 15:08:24 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-18 15:08:24 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-18 23:01:01 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-18 23:01:01 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-18 23:01:01 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-18 23:13:34 INFO [scoreboard.app] Focus watchdog: initial 250-tick phase done; continuing every 3000ms so other apps (encoder/OBS) cannot stay on top indefinitely
+2026-04-18 23:31:03 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-18 23:31:03 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-19 00:09:03 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-19 00:09:03 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 00:09:03 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 00:09:16 INFO [scoreboard.app] Application shutdown requested
+2026-04-19 00:09:16 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-19 00:09:16 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-19 00:13:27 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-19 00:13:27 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+focus_topmost_hold_ms=3000
+2026-04-19 00:13:27 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 2-3
+2026-04-19 00:13:28 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 00:13:28 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-19 00:13:30 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=196738); follow-up reclaim
+2026-04-19 00:13:30 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 00:13:34 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=196738); follow-up reclaim
+2026-04-19 00:13:34 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 00:13:40 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=196738); follow-up reclaim
+2026-04-19 00:13:40 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 04:45:42 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1707x1067
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-19 04:45:42 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+focus_topmost_hold_ms=3000
+2026-04-19 04:45:42 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 2-3
+2026-04-19 04:45:43 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 04:45:43 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-19 04:45:45 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=197002); follow-up reclaim
+2026-04-19 04:45:45 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 04:45:49 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=197002); follow-up reclaim
+2026-04-19 04:45:49 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 04:45:55 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=197002); follow-up reclaim
+2026-04-19 04:45:55 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 04:58:16 INFO [scoreboard.app] Focus watchdog: initial 250-tick phase done; continuing every 3000ms so other apps (encoder/OBS) cannot stay on top indefinitely
+2026-04-19 05:15:43 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-19 05:15:43 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-19 07:22:35 INFO [scoreboard.app] Application shutdown requested
+2026-04-19 07:22:35 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-19 07:22:35 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-19 07:22:35 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-19 10:39:50 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1280x720
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-19 10:39:50 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+focus_topmost_hold_ms=3000
+2026-04-19 10:39:50 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 2-3
+2026-04-19 10:39:51 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 10:39:51 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-19 10:39:54 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=66414); follow-up reclaim
+2026-04-19 10:39:54 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 10:39:57 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=66414); follow-up reclaim
+2026-04-19 10:39:57 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 10:40:03 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=66414); follow-up reclaim
+2026-04-19 10:40:03 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 10:41:51 INFO [scoreboard.app] Application shutdown requested
+2026-04-19 10:41:51 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-19 10:41:51 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-19 11:08:38 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1280x720
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-19 11:08:38 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+focus_topmost_hold_ms=3000
+2026-04-19 11:08:38 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-0
+2026-04-19 11:08:38 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 11:08:38 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-19 11:08:41 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=132764); follow-up reclaim
+2026-04-19 11:08:41 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:08:44 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=132764); follow-up reclaim
+2026-04-19 11:08:44 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:08:50 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=132764); follow-up reclaim
+2026-04-19 11:08:50 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:13:42 ERROR [scoreboard.obs_health] RECORDING_OBS_HEALTH_CHECK is on but obsws-python is not installed (pip install obsws-python)
+2026-04-19 11:13:43 INFO [scoreboard.app] Recording overlay: countdown started (encoder capture active; C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-19 11:13:43 INFO [scoreboard.recording_overlay] Recording overlay widgets created
+2026-04-19 11:13:43 INFO [scoreboard.recording_overlay] Recording overlay: countdown started (max 20 min)
+2026-04-19 11:13:56 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-19 11:13:56 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-19 11:13:56 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-19 11:13:56 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-19 11:13:56 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-19 11:13:56 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-19 11:14:01 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=60963111 mtime=2026-04-19T11:13:56
+2026-04-19 11:14:01 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=5 size_bytes=60963111
+2026-04-19 11:14:01 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-19 11:14:02 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=2408
+2026-04-19 11:14:02 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-19 11:14:22 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=2408 code=0
+2026-04-19 11:14:22 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-19 11:14:22 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-19 11:14:22 INFO [scoreboard.replay_controller] Replay: start ignored (replay already active; press Ctrl+Alt+q to stop)
+2026-04-19 11:14:22 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-19 11:14:22 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-19 11:14:23 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-19 11:14:23 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-19 11:14:23 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 11:14:32 INFO [scoreboard.recording_overlay] Recording overlay: session end info shown
+2026-04-19 11:14:33 INFO [scoreboard.app] Recording overlay: encoder idle — hiding in-progress timer if shown (C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-19 11:14:37 INFO [scoreboard.recording_overlay] Recording overlay: hidden
+2026-04-19 11:15:44 INFO [scoreboard.app] Recording overlay: countdown started (encoder capture active; C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-19 11:15:44 INFO [scoreboard.recording_overlay] Recording overlay: countdown started (max 20 min)
+2026-04-19 11:16:13 INFO [scoreboard.recording_overlay] Recording overlay: session end info shown
+2026-04-19 11:16:14 INFO [scoreboard.app] Recording overlay: encoder idle — hiding in-progress timer if shown (C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-19 11:16:18 INFO [scoreboard.recording_overlay] Recording overlay: hidden
+2026-04-19 11:16:23 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-19 11:16:23 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-19 11:16:23 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-19 11:16:23 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-19 11:16:23 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-19 11:16:23 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-19 11:16:28 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=57983412 mtime=2026-04-19T11:16:23
+2026-04-19 11:16:28 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=5 size_bytes=57983412
+2026-04-19 11:16:28 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-19 11:16:28 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=684
+2026-04-19 11:16:28 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-19 11:16:54 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=684 code=0
+2026-04-19 11:16:54 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-19 11:16:54 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-19 11:16:54 INFO [scoreboard.replay_controller] Replay: start ignored (replay already active; press Ctrl+Alt+q to stop)
+2026-04-19 11:16:54 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-19 11:16:54 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-19 11:16:55 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-19 11:16:55 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-19 11:16:55 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 11:17:25 INFO [scoreboard.app] Application shutdown requested
+2026-04-19 11:17:25 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-19 11:17:25 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-19 11:25:30 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1280x720
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+q' -> '<Control-Alt-q>'
+2026-04-19 11:25:30 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+q'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+focus_topmost_hold_ms=3000
+2026-04-19 11:25:30 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-0
+2026-04-19 11:25:30 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 11:25:30 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-19 11:25:33 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=1639948); follow-up reclaim
+2026-04-19 11:25:33 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:25:36 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=1639948); follow-up reclaim
+2026-04-19 11:25:36 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:25:39 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-19 11:25:39 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-19 11:25:39 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-19 11:25:39 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-19 11:25:39 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-19 11:25:39 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-19 11:25:44 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=60899893 mtime=2026-04-19T11:25:38
+2026-04-19 11:25:44 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=6 size_bytes=60899893
+2026-04-19 11:25:44 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-19 11:25:44 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=9180
+2026-04-19 11:25:44 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-19 11:25:53 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=9180 code=0
+2026-04-19 11:25:53 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-19 11:25:53 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-19 11:25:53 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-19 11:25:53 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-19 11:25:54 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-19 11:25:54 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-19 11:25:54 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 11:26:02 INFO [scoreboard.app] Application shutdown requested
+2026-04-19 11:26:02 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-19 11:26:02 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-19 11:31:36 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1280x720
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+e' -> '<Control-Alt-e>'
+2026-04-19 11:31:36 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+e'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+focus_topmost_hold_ms=3000
+2026-04-19 11:31:36 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-0
+2026-04-19 11:31:36 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 11:31:36 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-19 11:31:39 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=1181406); follow-up reclaim
+2026-04-19 11:31:39 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:31:42 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=1181406); follow-up reclaim
+2026-04-19 11:31:42 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:31:46 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-19 11:31:46 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-19 11:31:46 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-19 11:31:46 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-19 11:31:46 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-19 11:31:46 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-19 11:31:51 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=58233471 mtime=2026-04-19T11:31:45
+2026-04-19 11:31:51 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=6 size_bytes=58233471
+2026-04-19 11:31:51 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-19 11:31:51 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=9688
+2026-04-19 11:31:51 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-19 11:32:10 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=9688 code=0
+2026-04-19 11:32:10 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-19 11:32:10 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-19 11:32:10 INFO [scoreboard.replay_controller] Replay: stop showing=True video_active=False phase=SLATE_VISIBLE
+2026-04-19 11:32:10 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-19 11:32:10 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-19 11:32:11 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-19 11:32:11 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-19 11:32:11 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-19 11:32:11 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 11:32:23 INFO [scoreboard.app] Application shutdown requested
+2026-04-19 11:32:23 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-19 11:32:23 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)
+2026-04-19 11:37:48 INFO [scoreboard.startup_validation] PILOT STARTUP DIAGNOSTICS
+  app_version=0.2.0
+  screen=1280x720
+  state_file='state.json' (present)
+  replay_enabled=True mpv=OK C:\ReplayTrove\mpv\mpv.exe
+  replay_video=OK path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+  replay_unavailable_image=OK path='assets/replay_unavailable.png'
+  replay_buffer_loading_frames=OK dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+  encoder_status_overlay=on json=OK ready_png=OK unavail_png=OK
+  slideshow_enabled=True dir_ok=True image_count=28
+  launcher_status=on path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+  recording_max_minutes=20 idle_timeout_min=30
+  heartbeat_interval_minutes=0 (0=off)
+  recording_obs_health_check=True replay_obs_broadcast_on_unavailable=False replay_launcher_restart_obs=False ws='127.0.0.1':4455 timeout_sec=2.0 obsws-python=MISSING
+  obs_restart_chord=on exe=OK C:\Program Files\obs-studio\bin\64bit\obs64.exe
+  obs_status_indicator=True poll_ms=5000 require_main_idle=False
+  scoreboard_debug=False
+  hotkeys:
+    record_start: 'Ctrl+Shift+g' -> '<Control-Shift-G>'
+    record_dismiss: 'Ctrl+Alt+m' -> '<Control-Alt-m>'
+    black_screen: 'Ctrl+Shift+b' -> '<Control-Shift-B>'
+    replay_buffer_loading: 't' -> ('legacy', 't')
+    replay_start: 'i' -> ('legacy', 'i')
+    replay_stop: 'Ctrl+Alt+e' -> '<Control-Alt-e>'
+2026-04-19 11:37:48 INFO [scoreboard.startup_validation] Full settings snapshot:
+state_file='state.json'
+scoreboard_background_image='Score BG.png'
+replay_slate_image='ir slate.png'
+slideshow_dir='C:\\Users\\admin\\Dropbox\\slideshow'
+replay_video_path='C:\\ReplayTrove\\INSTANTREPLAY.mkv'
+replay_unavailable_image='assets/replay_unavailable.png'
+mpv_path='C:\\ReplayTrove\\mpv\\mpv.exe'
+mpv_embedded=False
+mpv_hwdec_enabled=False
+mpv_hwdec_mode='auto'
+mpv_fullscreen_enabled=True
+mpv_keep_open_enabled=True
+mpv_loop_enabled=True
+mpv_video_sync_mode='display-resample'
+mpv_framedrop_mode='vo'
+mpv_interpolation_enabled=False
+mpv_force_window_enabled=True
+mpv_additional_args=()
+mpv_process_priority='normal'
+mpv_obs_friendly=True
+mpv_borderless_fullscreen=True
+mpv_obs_lower_process_priority=True
+mpv_obs_force_software_decode=False
+mpv_replay_quality='fast'
+mpv_exit_hotkey='Ctrl+Alt+q'
+replay_start_hotkey='i'
+replay_stop_hotkey='Ctrl+Alt+e'
+synthetic_focus_click=True
+recording_max_minutes=20
+recording_ended_hold_ms=120000
+recording_session_end_info_ms=5000
+recording_overlay_width=538
+recording_overlay_height=189
+recording_progress_image_on='assets/recording/inprogress-on.png'
+recording_ended_image='assets/recording/recording-ended.png'
+recording_ended_graphic_hold_ms=10000
+recording_overlay_timer_offset_x_px=430
+recording_overlay_timer_offset_y_px=50
+recording_start_hotkey='Ctrl+Shift+g'
+recording_dismiss_hotkey='Ctrl+Alt+m'
+black_screen_hotkey='Ctrl+Shift+b'
+replay_buffer_loading_hotkey='t'
+replay_buffer_loading_dir='C:\\ReplayTrove\\scoreboard\\assets\\replay_buffer_loading'
+replay_buffer_loading_frame_ms=3000
+replay_buffer_loading_margin_px=24
+encoder_status_enabled=True
+encoder_state_path='C:\\ReplayTrove\\scoreboard\\encoder_state.json'
+encoder_status_ready_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\ready.png'
+encoder_status_unavailable_image='C:\\ReplayTrove\\scoreboard\\assets\\recorderstatus\\unavailable.png'
+encoder_status_poll_ms=2000
+encoder_status_stale_seconds=45
+encoder_status_margin_px=24
+aux_overlay_display_scale=0.5
+recording_encoder_sync_enabled=True
+recording_encoder_poll_ms=1000
+launcher_status_enabled=True
+launcher_status_json_path='C:\\ReplayTrove\\launcher\\scoreboard_status.json'
+idle_timeout_ms=1800000
+slideshow_interval_ms=12000
+replay_enabled=True
+slideshow_enabled=True
+scoreboard_debug=False
+scoreboard_log_file='logs/scoreboard.log'
+heartbeat_interval_minutes=0
+replay_transition_timeout_ms=90000
+replay_slate_stuck_timeout_ms=90000
+replay_file_max_age_seconds=120
+replay_obs_broadcast_on_unavailable=False
+replay_launcher_restart_obs_on_unavailable=False
+replay_launcher_restart_obs_script='C:\\ReplayTrove\\launcher\\restart_obs.ps1'
+recording_obs_health_check=True
+obs_websocket_host='127.0.0.1'
+obs_websocket_port=4455
+obs_websocket_timeout_sec=2.0
+recording_obs_block_if_main_recording=False
+recording_obs_health_fail_closed=False
+obs_restart_chord_enabled=True
+obs_executable=''
+obs_restart_launch_args='--disable-shutdown-check'
+obs_restart_start_replay_buffer=True
+obs_restart_post_launch_delay_ms=7000
+obs_status_indicator_enabled=True
+obs_status_poll_interval_ms=5000
+obs_status_require_main_output_idle=False
+focus_watchdog_ticks=250
+focus_watchdog_interval_ms=3000
+screensaver_exit_topmost_hold_ms=4500
+focus_topmost_hold_ms=3000
+2026-04-19 11:37:48 INFO [scoreboard.persistence.score_store] Loaded scores from state.json: 0-0
+2026-04-19 11:37:48 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 11:37:48 INFO [scoreboard.app] Startup readiness: streamdeck_hotkeys=deferred replay_enabled=True recording_overlay=ok scheduler=ok synthetic_focus_click=True obs_recording_gate=on encoder_recording_sync=on obs_restart_chord=on obs_status_indicator=on log_file='logs/scoreboard.log'
+2026-04-19 11:37:50 INFO [scoreboard.app] Focus: synthetic click attempt 1/3 (hwnd=2819552); follow-up reclaim
+2026-04-19 11:37:50 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_1 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:37:54 INFO [scoreboard.app] Focus: synthetic click attempt 2/3 (hwnd=2819552); follow-up reclaim
+2026-04-19 11:37:54 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_2 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:38:00 INFO [scoreboard.app] Focus: synthetic click attempt 3/3 (hwnd=2819552); follow-up reclaim
+2026-04-19 11:38:00 INFO [scoreboard.app] Focus reclaim: reason=after_synthetic_click_3 win32_foreground=True focus_ok=True focus_widget=<tkinter.Canvas object .!canvas>
+2026-04-19 11:38:26 INFO [scoreboard.app] Recording overlay: countdown started (encoder capture active; C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-19 11:38:26 INFO [scoreboard.recording_overlay] Recording overlay widgets created
+2026-04-19 11:38:26 INFO [scoreboard.recording_overlay] Recording overlay: countdown started (max 20 min)
+2026-04-19 11:39:58 INFO [scoreboard.app] Recording overlay: encoder idle — hiding in-progress timer if shown (C:\ReplayTrove\scoreboard\encoder_state.json)
+2026-04-19 11:39:58 INFO [scoreboard.recording_overlay] Recording overlay: hidden
+2026-04-19 11:40:12 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-19 11:40:12 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-19 11:40:12 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-19 11:40:12 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-19 11:40:12 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-19 11:40:12 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-19 11:40:17 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=57835803 mtime=2026-04-19T11:40:10
+2026-04-19 11:40:17 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=6 size_bytes=57835803
+2026-04-19 11:40:17 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-19 11:40:17 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=4360
+2026-04-19 11:40:17 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-19 11:40:27 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=4360 code=0
+2026-04-19 11:40:27 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-19 11:40:27 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-19 11:40:27 INFO [scoreboard.replay_controller] Replay: stop showing=True video_active=False phase=SLATE_VISIBLE
+2026-04-19 11:40:27 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-19 11:40:27 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-19 11:40:27 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-19 11:40:27 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-19 11:40:27 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-19 11:40:28 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 11:46:33 INFO [scoreboard.replay_controller] Replay: start (fade in to slate)
+2026-04-19 11:46:33 INFO [scoreboard.replay_controller] Replay: fade-in to slate starting
+2026-04-19 11:46:33 INFO [scoreboard.replay_controller] Replay phase: IDLE -> FADING_IN
+2026-04-19 11:46:34 INFO [scoreboard.replay_controller] Replay phase: FADING_IN -> SLATE_VISIBLE
+2026-04-19 11:46:34 INFO [scoreboard.replay_controller] Replay: slate visible; scheduling video launch
+2026-04-19 11:46:34 INFO [scoreboard.replay_controller] Replay: launch attempt scheduled in 5000 ms
+2026-04-19 11:46:39 INFO [scoreboard.replay_controller] Replay file check: exists=True size_bytes=57656667 mtime=2026-04-19T11:46:32
+2026-04-19 11:46:39 INFO [scoreboard.replay_controller] Replay launch approved: fresh file age_seconds=6 size_bytes=57656667
+2026-04-19 11:46:39 INFO [scoreboard.replay_controller] Replay: launching mpv executable=C:\ReplayTrove\mpv\mpv.exe video=C:\ReplayTrove\INSTANTREPLAY.mkv
+2026-04-19 11:46:39 INFO [scoreboard.replay_controller] Replay: mpv started OK (fullscreen) pid=14664
+2026-04-19 11:46:39 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> VIDEO_PLAYING
+2026-04-19 11:46:52 INFO [scoreboard.replay_controller] Replay: mpv process exited pid=14664 code=0
+2026-04-19 11:46:52 INFO [scoreboard.replay_controller] Replay phase: VIDEO_PLAYING -> SLATE_VISIBLE
+2026-04-19 11:46:52 INFO [scoreboard.replay_controller] Replay: scoreboard restored after mpv exit; holding slate before fade-out
+2026-04-19 11:46:52 INFO [scoreboard.replay_controller] Replay: stop showing=True video_active=False phase=SLATE_VISIBLE
+2026-04-19 11:46:52 INFO [scoreboard.replay_controller] Replay: fade-out from slate starting
+2026-04-19 11:46:52 INFO [scoreboard.replay_controller] Replay phase: SLATE_VISIBLE -> FADING_OUT
+2026-04-19 11:46:52 INFO [scoreboard.replay_buffer_loading_overlay] Replay buffer loading: hotkey received
+2026-04-19 11:46:53 INFO [scoreboard.replay_controller] Replay phase: FADING_OUT -> IDLE
+2026-04-19 11:46:53 INFO [scoreboard.replay_controller] Replay: fade-out complete; normal scoreboard (user dismiss)
+2026-04-19 11:46:53 INFO [scoreboard.app] Focus: re-arming watchdog after replay_fade_out (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 11:59:26 INFO [scoreboard.app] Focus watchdog: initial 250-tick phase done; continuing every 3000ms so other apps (encoder/OBS) cannot stay on top indefinitely
+2026-04-19 12:17:33 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-19 12:17:33 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-19 13:46:50 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-19 13:46:50 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 13:46:50 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 13:59:24 INFO [scoreboard.app] Focus watchdog: initial 250-tick phase done; continuing every 3000ms so other apps (encoder/OBS) cannot stay on top indefinitely
+2026-04-19 14:16:53 INFO [scoreboard.screensaver] Screensaver: starting
+2026-04-19 14:16:53 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=True)
+2026-04-19 14:39:33 INFO [scoreboard.screensaver] Screensaver: stopping
+2026-04-19 14:39:33 INFO [scoreboard.app] Focus: re-arming watchdog after screensaver_stopped (~750 s of periodic reclaim, interval 3000ms)
+2026-04-19 14:39:33 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=True screensaver_active=False)
+2026-04-19 14:40:00 INFO [scoreboard.app] Application shutdown requested
+2026-04-19 14:40:00 INFO [scoreboard.replay_controller] Replay: teardown
+2026-04-19 14:40:00 INFO [scoreboard.app] Launcher status: wrote C:\ReplayTrove\launcher\scoreboard_status.json (scoreboard_running=False screensaver_active=False)

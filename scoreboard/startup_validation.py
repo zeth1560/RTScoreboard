@@ -152,6 +152,8 @@ def log_pilot_diagnostics_summary(
         ("record_dismiss", settings.recording_dismiss_hotkey),
         ("black_screen", settings.black_screen_hotkey),
         ("replay_buffer_loading", settings.replay_buffer_loading_hotkey),
+        ("replay_start", settings.replay_start_hotkey),
+        ("replay_stop", settings.replay_stop_hotkey),
     ):
         p = parse_recording_hotkey_to_tk_bind(spec)
         hotkey_lines.append(f"    {label}: {spec!r} -> {p!r}")
